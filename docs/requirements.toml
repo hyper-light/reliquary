@@ -1,0 +1,131 @@
+# Reliquary's requirement registry: the goals of track T9 of kiln's critical path (kiln plan
+# 01a157fe104d7444a38c808b89f2fae0), each acceptance criterion (AC-T9.n.k) and test (T-T9.n.k) with its ID,
+# from the plan's version below on 2026-10-20. Code comments, commits, tests and benchmarks cite these IDs;
+# kiln's citation gate (CP-T6.6) reads them from kiln's vendored copy. Reliquary's own IDs join them as
+# its design names them.
+
+plan = "01a157fe104d7444a38c808b89f2fae0"
+plan_version = 1
+track = "CP-T9"
+
+[[goal]]
+id = "CP-T9.1"
+title = "Reliquary set up from kiln's registry; Shards' artifacts checked"
+criteria = [
+  { id = "AC-T9.1.1", text = "Usable now: shards push, shards pull and AGENT … FROM work against kiln's registry with every artifact checked, in a change request that passes the gate; Reliquary's repository has its CLAUDE.md, STATUS.md and gate" },
+  { id = "AC-T9.1.2", text = "OCI distribution-spec conformance tests passed (pull, push, discovery, management) is exactly 100%, measured by the spec's conformance suite" },
+  { id = "AC-T9.1.3", text = "§12.17's refusal cases accepted on push is exactly 0, measured by a test of every refusal case" },
+  { id = "AC-T9.1.4", text = "1 MiB blob GET p99 on a LAN is at most 10 ms, measured by bench reliquary_pull" },
+]
+tests = [
+  { id = "T-T9.1.1", text = "Everything kiln's registry served before the move — passes when it is served identically after it, by digest" },
+]
+
+[[goal]]
+id = "CP-T9.2"
+title = "Skills and MCP servers, first-class"
+criteria = [
+  { id = "AC-T9.2.1", text = "Usable now: kiln's agents get their skills and MCP servers from Reliquary, in a change request that passes the gate" },
+  { id = "AC-T9.2.2", text = "An MCP client discovers Reliquary's servers through the MCP Registry API, checked against the official server.json schema" },
+  { id = "AC-T9.2.3", text = "invalid skills accepted on publish, over a corpus of real and mutated skills is exactly 0, measured by the publish checks" },
+]
+tests = [
+  { id = "T-T9.2.1", text = "A skill published from git at a ref — passes when it pulls back byte for byte, with its version and digest" },
+]
+
+[[goal]]
+id = "CP-T9.3"
+title = "The catalog and search"
+criteria = [
+  { id = "AC-T9.3.1", text = "Usable now: people and agents find agents, skills, MCP servers and images by search through the API, in a change request that passes the gate" },
+  { id = "AC-T9.3.2", text = "search p99 over 100,000 artifacts is at most 50 ms, measured by bench reliquary_search" },
+  { id = "AC-T9.3.3", text = "artifacts missing from search 1 s after publish is exactly 0, measured by a test publishing and searching" },
+]
+tests = [
+  { id = "T-T9.3.1", text = "An artifact's asks — passes when they show as its config states them, for each platform" },
+]
+
+[[goal]]
+id = "CP-T9.4"
+title = "Trust: signatures, TUF, policies at pull, provenance"
+criteria = [
+  { id = "AC-T9.4.1", text = "Usable now: kiln refuses to launch an Agentfile whose agent or harness isn't signed by an allowed key, in a change request that passes the gate" },
+  { id = "AC-T9.4.2", text = "unsigned, wrongly signed or stale artifacts accepted where policy forbids them is exactly 0, measured by a test of planted cases" },
+  { id = "AC-T9.4.3", text = "kiln-built artifacts without provenance is exactly 0, measured by a check over the registry" },
+]
+tests = [
+  { id = "T-T9.4.1", text = "A rollback attack with old TUF metadata — passes when it is refused" },
+]
+
+[[goal]]
+id = "CP-T9.5"
+title = "Pull-through caches and mirrors"
+criteria = [
+  { id = "AC-T9.5.1", text = "Usable now: every runner pulls through Reliquary at LAN speed and CI never hits an upstream rate limit, in a change request that passes the gate" },
+  { id = "AC-T9.5.2", text = "upstream rate-limit failures in CI over a week is exactly 0, measured by CI's records" },
+  { id = "AC-T9.5.3", text = "cached pulls failed while an upstream is down is exactly 0, measured by an outage drill" },
+]
+tests = [
+  { id = "T-T9.5.1", text = "An upstream tag moved — passes when the cache serves the new digest within its freshness window and never mixes the two" },
+]
+
+[[goal]]
+id = "CP-T9.6"
+title = "Fast distribution: P2P, lazy loading, images ready to boot"
+criteria = [
+  { id = "AC-T9.6.1", text = "Usable now: CI legs and agent VMs start before their image is fully downloaded, in a change request that passes the gate" },
+  { id = "AC-T9.6.2", text = "time to a 2 GB image's workload running, lazy against a full pull falls by at least 70% compared with a full pull, measured by bench image_start on fedora" },
+  { id = "AC-T9.6.3", text = "origin bytes sent for one image pulled by 100 runners, in image sizes is at most 3, measured by a P2P lab with simulated runners" },
+]
+tests = [
+  { id = "T-T9.6.1", text = "A peer serving corrupted chunks — passes when it is caught by digest and dropped, and the pull completes" },
+]
+
+[[goal]]
+id = "CP-T9.7"
+title = "On Mantle's cluster: garbage collection, quotas, retention"
+criteria = [
+  { id = "AC-T9.7.1", text = "Usable now: kiln's registry survives the loss of a disk or a machine, in a change request that passes the gate" },
+  { id = "AC-T9.7.2", text = "blobs lost when a storage node's disk is wiped is exactly 0, measured by the Mantle lab" },
+  { id = "AC-T9.7.3", text = "pushes or pulls failed during garbage collection under load is exactly 0, measured by a GC drill" },
+  { id = "AC-T9.7.4", text = "referenced blobs collected is exactly 0, measured by a property test of generated histories" },
+]
+tests = [
+  { id = "T-T9.7.1", text = "A push racing a collection of its blobs — passes when the push completes and its blobs stay" },
+]
+
+[[goal]]
+id = "CP-T9.8"
+title = "Kiln's own artifacts in Reliquary"
+criteria = [
+  { id = "AC-T9.8.1", text = "Usable now: kiln hands out every artifact from one store, and runner upgrades download only what changed, in a change request that passes the gate" },
+  { id = "AC-T9.8.2", text = "bytes a runner upgrade downloads, against the binary's size is at most 30%, measured by the upgrade lab over 10 consecutive releases" },
+  { id = "AC-T9.8.3", text = "The CI cache and artifact services (GitHub's cache and artifact APIs) work unchanged on Reliquary" },
+]
+tests = [
+  { id = "T-T9.8.1", text = "The blue/green upgrade lab (33 checks), unchanged in what it checks" },
+]
+
+[[goal]]
+id = "CP-T9.9"
+title = "Replication and regions"
+criteria = [
+  { id = "AC-T9.9.1", text = "Usable now: kiln's runners pull from their own region, in a change request that passes the gate" },
+  { id = "AC-T9.9.2", text = "tag replication between regions, p99 is at most 1 s, measured by a simulated 3-region lab at 60 ms apart" },
+  { id = "AC-T9.9.3", text = "pulls failed while one region is lost is exactly 0, measured by the region-loss drill" },
+]
+tests = [
+  { id = "T-T9.9.1", text = "A tag moved in two regions at once — passes when it ends the same in both, by the stated rule" },
+]
+
+[[goal]]
+id = "CP-T9.10"
+title = "Reliquary on its own, and its bar"
+criteria = [
+  { id = "AC-T9.10.1", text = "Usable now: production kiln runs on Reliquary with its comparison published, and Reliquary installs on its own" },
+  { id = "AC-T9.10.2", text = "pull p99 against CNCF Distribution's on the same hardware is at most 100%, measured by bench reliquary_compare" },
+  { id = "AC-T9.10.3", text = "artifacts lost in the fire drills (node off, disk lost, partition, region lost) is exactly 0, measured by the drills' counts" },
+]
+tests = [
+  { id = "T-T9.10.1", text = "A fresh machine to a working Reliquary from its README alone, by a fresh subagent" },
+]
