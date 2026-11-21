@@ -12,33 +12,49 @@ on:
   pull_request: {}
   manual: true
 concurrency: { group: "instructions-${{ branch }}", cancel-in-progress: true }
+defaults: { run: { shell: bash } }
 jobs:
   gate:
     name: instruction counts (bench/gated.toml, the change against its base)
     # A Linux container on a runner with docker: kiln's runners offer docker and host executors, and no
     # k8s; on arm64, where Valgrind runs as well (research/07 F21), so on a Mac's docker, never
-    # adacachy, which runs production.
+    # adacachy, which runs production. `container:` puts the steps in it: `image:` alone only names the
+    # image of a leg already in one, and on 2026-11-21 the steps ran on the Mac's own shell.
     runs-on: [baremetal]
     requires: ["arch == aarch64", "executors has docker"]
-    image: docker.io/library/rust:1.99.1-trixie
+    container: docker.io/library/rust:1.99.1-trixie
     timeout-minutes: 90
     env:
       CARGO_INCREMENTAL: "0"
     artifacts: ["records"]
+    # kiln's own checkout is the commit alone (`--depth=1`), and a later `git fetch` has no token:
+    # the history the base is found in comes through kiln/checkout, the base's first for a pull request.
+    checkout: false
     steps:
-      - name: valgrind, git and python3
-        run: command -v valgrind >/dev/null && command -v git >/dev/null && command -v python3 >/dev/null || { apt-get update && apt-get install -y --no-install-recommends valgrind git python3; }
+      - name: the base's history (a pull request's)
+        if: github.event_name == 'pull_request'
+        uses: kiln/checkout@v1
+        with: { ref: "${{ github.event.pull_request.base.sha }}", fetch-depth: 0 }
+      - name: the change, with its history
+        uses: kiln/checkout@v1
+        with: { fetch-depth: 0 }
+      # The steps run as root over a workspace the runner's user owns, which git refuses until told.
+      - name: valgrind, git and python3; git trusts the workspace
+        run: |
+          command -v valgrind >/dev/null && command -v git >/dev/null && command -v python3 >/dev/null || { apt-get update && apt-get install -y --no-install-recommends valgrind git python3; }
+          git config --global --add safe.directory '*'
       - name: toolchain (rust-toolchain.toml)
         run: rustup show active-toolchain || rustup toolchain install
       # A pull request is measured against where it leaves its base branch; a push against the commit
       # the branch held before it, so a push of several commits is gated whole (its parent when the
-      # event names none). The two builds go to paths of one length: cachegrind's counts move with a
-      # file name's length (research/07 F18).
+      # event names none, as a run by hand does). The two builds go to paths of one length:
+      # cachegrind's counts move with a file name's length (research/07 F18).
       - name: build the base (A) and the change (B)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          if [ -n "${GITHUB_BASE_REF:-}" ]; then
-            git fetch --no-tags origin "$GITHUB_BASE_REF"
-            base=$(git merge-base HEAD FETCH_HEAD)
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            base=$(git merge-base HEAD "$BASE_SHA")
           else
             before=$(python3 -I -c 'import json,os; print(json.load(open(os.environ["GITHUB_EVENT_PATH"])).get("before",""))' 2>/dev/null || true)
             if [ -n "$before" ] && git cat-file -e "$before^{commit}" 2>/dev/null; then base=$before; else base=$(git rev-parse HEAD~1); fi
