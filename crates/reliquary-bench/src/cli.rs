@@ -10,9 +10,10 @@ use serde::Deserialize;
 use crate::ab::Better;
 use crate::bench::{self, Bench};
 use crate::changes::{self, Measured};
+use crate::drive::{Clock, Monotonic};
 use crate::driver::{self, ArmSpec, Offered, Outcome, Processes, Request};
 use crate::gate::{self, Counter, GateFile, GateRequest};
-use crate::load::Standing;
+use crate::load::{self, Settled, Standing};
 use crate::protocol::Metric;
 use crate::record::{self, Record, What};
 use crate::{report, rounds, worker};
@@ -36,6 +37,7 @@ pub const USAGE: &str = "usage: reliquary bench <command>
   gate GATED.toml --a PATH --b PATH [--counter os|cachegrind] [--valgrind PATH] [--scratch DIR]
             [--accept BENCH]... [--precision P] [--seed N] [--machine NAME] [--record DIR]
   changes SERIES.json [--acknowledged CHANGES.toml]
+  settle
   list
 M: throughput | instructions | latency:Q;  L: closed | open:RATE | power;  Q: pNN or pNN.N…
 ";
@@ -211,6 +213,7 @@ pub fn main<I: BufRead, O: Write, E: Write>(
         "ab" => run(rest, commit, out, true),
         "gate" => gate_command(rest, commit, out),
         "changes" => changes_command(rest, out),
+        "settle" => settle_command(rest, out),
         "list" => list(out),
         WORKER => worker_command(rest, commit, input, out),
         "once" => once(rest),
@@ -247,6 +250,33 @@ fn write(out: &mut impl Write, text: &str) -> Result<Ending, Failure> {
     out.write_all(text.as_bytes())
         .map_err(|e| Failure::Failed(e.to_string()))?;
     Ok(Ending::Done)
+}
+
+/// Waits for the load rule to hold before a run of record (AC-RQ0.7.4; `load::settle`): done when
+/// the one-minute load average fell under the limit, failed when work held it there or the platform
+/// keeps none.
+fn settle_command(args: &[String], out: &mut impl Write) -> Result<Ending, Failure> {
+    let a = Args::parse(args, &[])?;
+    if let Some(extra) = a.positional.first() {
+        return Err(Failure::Misuse(format!(
+            "settle takes no arguments, not `{extra}`"
+        )));
+    }
+    // Each pause waits out one of the kernel's updates on the run's own clock, which parks; a deadline
+    // past the clock's range is not waited for, and the wait then ends on its count of updates.
+    let mut clock = Monotonic::default();
+    let mut at = clock.now();
+    let settled = load::settle(hyper_measure::usage::load, || {
+        if let Some(next) = at.checked_add(load::UPDATE_NS) {
+            at = next;
+            clock.wait_until(at);
+        }
+    });
+    write(out, &settled.words(std::env::consts::OS))?;
+    Ok(match settled {
+        Settled::Quiet { .. } => Ending::Done,
+        Settled::Loaded { .. } | Settled::Unreadable => Ending::Failed,
+    })
 }
 
 fn list(out: &mut impl Write) -> Result<Ending, Failure> {
@@ -711,6 +741,8 @@ mod tests {
                 "work=1",
             ],
             vec!["changes"],
+            vec!["settle", "now"],
+            vec!["settle", "--wait", "1"],
         ] {
             let (mut out, mut err) = (Vec::new(), Vec::new());
             let e = main(&strings(&args), "abc", &mut input, &mut out, &mut err);

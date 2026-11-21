@@ -22,6 +22,7 @@ the design is [`docs/design/measurement.md`](../docs/design/measurement.md)).
 
 ```sh
 bash scripts/bench-build.sh <commit> ~/.cache/reliquary-bench/b    # a release build naming its commit
+~/.cache/reliquary-bench/b/reliquary bench settle &&                # the build's own load decays first
 ~/.cache/reliquary-bench/b/reliquary bench run judge --metric latency:p99 --load power \
   --machine <name> --record bench/records
 ```

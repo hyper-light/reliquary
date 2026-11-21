@@ -117,7 +117,13 @@ about 83%, the level that makes non-overlap a 5% test (research/07 F36).
 **Decision.** A record is of record when the one-minute load average, less the run's own share, is under
 2 at every reading (CLAUDE.md §7), and every build names a clean commit. The first reading is taken
 before any of the run's own work; the run's share is its processes' CPU over wall time decayed as the
-kernel decays the average, `e^(−Δt/60 s)` (research/07 F26, F27). A platform with no load average
+kernel decays the average, `e^(−Δt/60 s)` (research/07 F26, F27). A run of record begins once the rule
+holds: a build just finished leaves its own work in the average for minutes, which would hold a run
+right after it to the build's load, so `reliquary bench settle` reads the average once each of the
+kernel's five-second updates and waits while it is at or over the limit, at most the updates the
+first reading needs to fall to the limit with nothing running, `(60/5)·ln(L/2)`, and one window more,
+`60/5`, for work under the limit that slows the fall (F26); an average still over then is held there
+by other work, and the run that follows is not of record. A platform with no load average
 (Windows) makes no record of record, and says so. In a container the average read is the host's
 (research/07 F28): a busy host makes the record not of record, as it should. A build names its commit
 when `scripts/bench-build.sh` made it from one (`RELIQUARY_COMMIT`). A record not of record is written
@@ -127,6 +133,11 @@ such a record.
 
 **Evidence.** `load.rs`: a run begun at load 5.31 is not of record and names it (T-RQ0.7.8); the run's
 own threads are not held against it; no load average, or an unnamed or dirty commit, is not of record.
+A finished build's load, decaying toward 0.4, settles at the first update under the limit (the
+twentieth); a machine held at 3 is called loaded after its most, 17 updates, and no sooner; a quiet one
+waits for nothing; an unreadable average never settles. Live on an arm64 Mac whose average rose from
+38.8 to 75.9 (2026-11-21, not of record): `reliquary bench settle` parked through its most, 48 updates,
+ended after 240 seconds, and said the machine had not settled.
 `tests/records.rs` refuses a fixture citation of a record not of record.
 
 **Falsified by.** A record of record whose rerun on a quiet machine lies outside its interval, which

@@ -29,6 +29,12 @@ jobs:
     steps:
       - name: build the branch's tip, naming its commit
         run: BENCH_WORK="$RUNNER_TEMP/bench-build" bash scripts/bench-build.sh HEAD builds/b
+      # A run of record begins once the load rule holds (docs/design/measurement.md M5): the build just
+      # finished leaves its own work in the one-minute average for minutes. `settle` ends 1 when other
+      # work holds the average at or over the limit; the run goes on, and its record says why it is
+      # not of record.
+      - name: wait for the load average to fall under the rule's limit
+        run: builds/b/reliquary bench settle || [ $? -eq 1 ]
       - name: measure, and feed a point of record to kiln's metrics
         run: |
           mkdir -p records

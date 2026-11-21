@@ -84,7 +84,8 @@ x86_64 and Linux arm64, `.kiln/platforms.yaml`) and the evidence its requirement
   operations, sets how many builds, process starts and rounds a point needs from the variation measured
   at each level (Kalibera and Jones), measures latency open loop from each intended start, compares two
   builds or settings in randomized interleaved cycles with a verdict only when intervals separate, holds
-  every record to the load rule and a clean commit, and finds change points in a nightly series
+  every record to the load rule and a clean commit (a run of record first waiting, `bench settle`, for
+  the average its build left to fall under the rule), and finds change points in a nightly series
   (E-Divisive, seeded from the history). Its tests cover T-RQ0.7.1 to .10; simulated A|A runs report a
   difference 0.03% to 0.29% of the time against the 5% AC-RQ0.7.3 allows. `.kiln/instructions.yaml`
   gates `bench/gated.toml`'s instruction counts under cachegrind on every change, and

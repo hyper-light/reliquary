@@ -661,7 +661,7 @@ fn as_u64_f64(v: u64) -> f64 {
 
 /// `⌈x⌉` as a count, at least one; a count past what a round's latencies could be held for is the
 /// worker's to refuse (it reserves them before it starts).
-fn ceil_count(x: f64) -> u64 {
+pub(crate) fn ceil_count(x: f64) -> u64 {
     if !(x.is_finite() && x > 1.0) {
         return 1;
     }

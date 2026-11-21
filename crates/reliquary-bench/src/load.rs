@@ -18,6 +18,10 @@ pub const LIMIT: f64 = 2.0;
 /// every five seconds (Linux `kernel/sched/loadavg.c`, `EXP_1`; research/07).
 const WINDOW_NS: f64 = 60e9;
 
+/// Format: how often the kernel updates the load average, in nanoseconds: every five seconds (Linux
+/// `include/linux/sched/loadavg.h`, `LOAD_FREQ`; research/07 F26).
+pub const UPDATE_NS: u64 = 5_000_000_000;
+
 /// One reading of the machine's load.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Reading {
@@ -144,6 +148,86 @@ pub fn standing(readings: &[Reading], commits: &[Option<String>], platform: &str
     }
 }
 
+/// How a wait for the load rule to hold before a run ended.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Settled {
+    /// The one-minute average read `load`, under the limit, after `updates` of the kernel's updates.
+    Quiet { updates: u64, load: f64 },
+    /// It still read `load`, at or over the limit, after `updates`, the most the wait takes: work at
+    /// or over the limit holds it there.
+    Loaded { updates: u64, load: f64 },
+    /// The platform keeps no load average, or gave one that is not a count of tasks.
+    Unreadable,
+}
+
+impl Settled {
+    /// What the wait came to, in the words `reliquary bench settle` prints, on `platform`.
+    #[must_use]
+    pub fn words(&self, platform: &str) -> String {
+        match self {
+            Self::Quiet { updates, load } => format!(
+                "settled: the one-minute load average is {load:.2}, under the rule's {LIMIT} \
+                 (CLAUDE.md §7), after {updates} of the kernel's five-second updates\n"
+            ),
+            Self::Loaded { updates, load } => format!(
+                "not settled: the one-minute load average is still {load:.2}, at or over the rule's \
+                 {LIMIT} (CLAUDE.md §7), after {updates} of the kernel's five-second updates, the \
+                 most it takes to fall under with less than that running: a run now is not of record\n"
+            ),
+            Self::Unreadable => format!(
+                "{platform} keeps no load average this tool can read, so the rule cannot be held: a \
+                 run here is never of record\n"
+            ),
+        }
+    }
+}
+
+/// The most of the kernel's updates a wait from a first reading of `from` takes: the updates the
+/// average needs to fall from `from` to the limit with nothing running, `(60/5)·ln(from / LIMIT)`,
+/// since it keeps `e^(−5/60)` of itself at each (research/07 F26), and one window more, `60/5`, for
+/// work under the limit that slows its fall. Past that, what holds it up is work at or over the limit.
+#[must_use]
+pub fn most_updates(from: f64) -> u64 {
+    let window = WINDOW_NS / crate::rounds::u64_as_f64(UPDATE_NS);
+    let decay = if from > LIMIT {
+        window * (from / LIMIT).ln()
+    } else {
+        0.0
+    };
+    crate::driver::ceil_count(decay + window)
+}
+
+/// A reading that is a count of tasks: finite and not negative.
+fn tasks(reading: Option<f64>) -> Option<f64> {
+    reading.filter(|l| l.is_finite() && *l >= 0.0)
+}
+
+/// Waits for the one-minute load average to fall under the rule's limit, as a run of record begins
+/// (AC-RQ0.7.4): a build just finished leaves its own work in the average for minutes, the average
+/// falling by `e^(−5/60)` an update. It reads the average with `read`, and while it is at or over the
+/// limit waits out one of the kernel's updates with `pause` and reads again, at most
+/// [`most_updates`] of the first reading.
+pub fn settle(mut read: impl FnMut() -> Option<f64>, mut pause: impl FnMut()) -> Settled {
+    let Some(first) = tasks(read()) else {
+        return Settled::Unreadable;
+    };
+    let most = most_updates(first);
+    let mut load = first;
+    let mut updates = 0u64;
+    while load >= LIMIT {
+        let Some(next) = updates.checked_add(1).filter(|&n| n <= most) else {
+            return Settled::Loaded { updates, load };
+        };
+        pause();
+        updates = next;
+        let Some(now) = tasks(read()) else {
+            return Settled::Unreadable;
+        };
+        load = now;
+    }
+    Settled::Quiet { updates, load }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,6 +308,117 @@ mod tests {
             standing(&[], &[], "linux"),
             Standing::NotOfRecord { .. }
         ));
+    }
+
+    /// A wait over `loads`, one a reading, and how many updates it waited out.
+    fn settled(loads: &[Option<f64>]) -> (Settled, usize) {
+        let mut readings = loads.iter().copied();
+        let mut pauses = 0usize;
+        let s = settle(|| readings.next().flatten(), || pauses += 1);
+        (s, pauses)
+    }
+
+    /// AC-RQ0.7.4: a machine whose load is a finished build's, decaying as the kernel decays it toward
+    /// what else runs (0.4 here), settles at the first update under the limit, within the most.
+    #[test]
+    fn a_finished_builds_load_settles_at_the_first_update_under_the_limit() {
+        let keep = (-1.0f64 / 12.0).exp();
+        let loads: Vec<Option<f64>> = (0..60).map(|k| Some(0.4 + 8.0 * keep.powi(k))).collect();
+        let (s, pauses) = settled(&loads);
+        // 8·e^(−k/12) < 1.6 first at k = ⌈12·ln 5⌉ = 20.
+        let Settled::Quiet { updates, load } = s else {
+            panic!("{s:?}")
+        };
+        assert_eq!((updates, pauses), (20, 20));
+        assert!(load < LIMIT, "{load}");
+        assert!(updates <= most_updates(8.4));
+    }
+
+    /// AC-RQ0.7.4: a machine other work holds at 3 is loaded once the wait has taken its most, and no
+    /// sooner.
+    #[test]
+    fn a_machine_held_over_the_limit_is_loaded_after_the_most_updates() {
+        let (s, pauses) = settled(&[Some(3.0); 100]);
+        // ⌈12·ln 1.5 + 12⌉ = ⌈16.87⌉ = 17.
+        assert_eq!(most_updates(3.0), 17);
+        assert_eq!(
+            s,
+            Settled::Loaded {
+                updates: 17,
+                load: 3.0
+            }
+        );
+        assert_eq!(pauses, 17);
+    }
+
+    /// AC-RQ0.7.4: a quiet machine waits for nothing.
+    #[test]
+    fn a_quiet_machine_settles_at_once() {
+        let (s, pauses) = settled(&[Some(0.7)]);
+        assert_eq!(
+            s,
+            Settled::Quiet {
+                updates: 0,
+                load: 0.7
+            }
+        );
+        assert_eq!(pauses, 0);
+    }
+
+    /// AC-RQ0.7.4: no load average, or one that is no count of tasks, before or during the wait, is
+    /// unreadable and never settles.
+    #[test]
+    fn an_unreadable_load_never_settles() {
+        for loads in [
+            vec![None],
+            vec![Some(f64::NAN)],
+            vec![Some(-1.0)],
+            vec![Some(5.0), None],
+            vec![Some(5.0), Some(f64::INFINITY)],
+        ] {
+            assert_eq!(settled(&loads).0, Settled::Unreadable, "{loads:?}");
+        }
+    }
+
+    /// AC-RQ0.7.4: the most is the decay with nothing running and one window more, in whole updates.
+    #[test]
+    fn the_most_updates_are_the_decay_and_one_window() {
+        assert_eq!(most_updates(0.3), 12);
+        assert_eq!(most_updates(LIMIT), 12);
+        // ⌈12·ln 4.2 + 12⌉ = ⌈29.22⌉ = 30.
+        assert_eq!(most_updates(8.4), 30);
+        // The bench host read 84 on 2026-11-21: ⌈12·ln 42 + 12⌉ = ⌈56.85⌉ = 57, under five minutes.
+        assert_eq!(most_updates(84.0), 57);
+    }
+
+    /// AC-RQ0.7.4: each ending says what it came to.
+    #[test]
+    fn each_ending_says_what_it_came_to() {
+        let quiet = Settled::Quiet {
+            updates: 20,
+            load: 1.91,
+        }
+        .words("linux");
+        assert!(
+            quiet.starts_with("settled: the one-minute load average is 1.91, under the rule's 2 "),
+            "{quiet}"
+        );
+        let loaded = Settled::Loaded {
+            updates: 17,
+            load: 3.0,
+        }
+        .words("macos");
+        assert!(
+            loaded.contains("still 3.00, at or over the rule's 2 ")
+                && loaded.contains("after 17 of")
+                && loaded.contains("not of record"),
+            "{loaded}"
+        );
+        assert!(
+            Settled::Unreadable
+                .words("windows")
+                .starts_with("windows keeps no load average")
+        );
     }
 
     /// AC-RQ0.7.4: the run's share follows its CPU and decays as the load average does.
