@@ -102,9 +102,10 @@ x86_64 and Linux arm64, `.kiln/platforms.yaml`) and the evidence its requirement
   guard. Checked on macOS arm64: lints, the production check, every test of `reliquary` and
   `reliquary-bench` (the end-to-end `tests/bench.rs` among them), and the gate live (ten A|A gates all
   passed; three gates of a build planted with 10% more work all failed). On Windows x86_64 (jupiter),
-  at rq0-ground's b95b7e3a on 2026-11-21: the crate's 79 tests and `tests/bench.rs`'s 6, the release
-  build, and real runs: an open-loop point, not of record since Windows keeps no load average; an A|A
-  comparison, not separated; and the gate with the OS's counter, refused, naming the platform.
+  at rq0-ground's 101f3c44 on 2026-11-21: the crate's 85 tests and `tests/bench.rs`'s 6, the release
+  build, and real runs: an open-loop point, not of record since Windows keeps no load average;
+  `bench settle`, refused for the same reason; and, at b95b7e3a, an A|A comparison, not separated, and
+  the gate with the OS's counter, refused, naming the platform.
   On Linux, in a Debian 13 arm64 container on the Mac (kiln's one Linux runner, adacachy, runs
   production, and `fedora` is stale in kiln): the crate's tests, the release build, and the cachegrind
   gate live (three A|A gates passed; two gates of a separate build with 10% more work failed, and passed
