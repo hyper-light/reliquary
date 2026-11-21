@@ -217,7 +217,7 @@ Done when:
 - AC-RQ0.7.3 An A|A run (the same build twice) reports a difference no more often than the tests' stated level, 5%, the level Mantle's measurement design uses.
 - AC-RQ0.7.4 A record made above the load rule is marked "not of record" and cannot be cited by an acceptance criterion.
 - AC-RQ0.7.5 Open-loop load generation records each operation's intended start, and latency is measured from it.
-- AC-RQ0.7.6 CI gates instruction counts for the benches it names, and a nightly run feeds latency to a change-point detector whose alert names the commit range.
+- AC-RQ0.7.6 CI gates instruction counts for the benches it names.
 - AC-RQ0.7.7 How many builds, process starts and rounds a point is measured over follows from the variation measured at each level and the interval asked for; the record states each count and why, and no "best of N" has a picked N.
 - AC-RQ0.7.8 The change-point detector gives the same verdict on the same history every time it is run.
 

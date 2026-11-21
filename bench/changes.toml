@@ -1,4 +1,4 @@
-# Change points the nightly run's detector found (`reliquary bench changes`, AC-RQ0.7.6) that a person
+# Change points the nightly run's detector found (`reliquary bench changes`, AC-RQ4.5.7) that a person
 # has looked at: each by the commit range the alert named, `<last before>..<first after>`, with why. An
 # alert for the worse whose range is not here fails the nightly run. A change point can move as nights
 # are added (research/07 F7); a moved one alerts again with its new range, to be looked at again.

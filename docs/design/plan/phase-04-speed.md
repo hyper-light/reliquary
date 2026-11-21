@@ -158,6 +158,7 @@ Done when:
 - AC-RQ4.5.4 A redirect's URL lets its holder read exactly that blob, for a life derived as RQ3.5's grants are, and carries no credential of the client's across hosts.
 - AC-RQ4.5.5 Every stock client in RQ1.10's matrix follows the redirect and verifies; one that cannot is served by relay, decided from what it says of itself or how it behaves, and the list is in the record.
 - AC-RQ4.5.6 Blob `HEAD` and range `GET` meet the same bar as whole `GET` at their own points of the matrix.
+- AC-RQ4.5.7 A nightly run measures bench `reliquary_pull`'s p99 on the bench host in its slot and feeds it to the change-point detector (`reliquary bench changes`, RQ0.7), whose alert names the commit range.
 
 Tests:
 - T-RQ4.5.1 [happy] `GET` blobs of every size in the matrix by each path → identical bytes; digests verify.
@@ -169,6 +170,7 @@ Tests:
 - T-RQ4.5.7 [hostile] A client that follows redirects and sends its registry token to the storage host → the storage host ignores it, and it is not logged.
 - T-RQ4.5.8 [exhaustion] Relay readers past the relay's admitted bytes in flight → refused with `Retry-After`; redirected readers are unaffected.
 - T-RQ4.5.9 [perf] Bench `reliquary_pull` across the matrix, of record → the bar's verdict at every point.
+- T-RQ4.5.10 [perf] A slowdown planted on main once three nights are fed (M8's fewest on each side) → by the sixth fed night the detector's alert names its commit range; the slowdown is reverted after.
 
 ---
 

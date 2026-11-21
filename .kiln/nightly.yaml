@@ -1,12 +1,12 @@
-# The nightly latency run (plan RQ0.7, AC-RQ0.7.6; bench/README.md): the branch's tip (main's, at
-# night), built naming its commit, measured on a runner alone, open loop at the power point, its p99 from
-# each operation's intended start; a point of record is fed to kiln's metrics ($KILN_METRICS, kiln's
-# docs/ci.md W16-R07). Then the series kiln keeps of it, one per fingerprint, a point a night for up to a
-# year, goes to the change-point detector, which reads each series alone and fails the run on a change
-# for the worse that bench/changes.toml does not acknowledge, naming its commit range and the last commit
-# of the history it read.
+# The nightly latency run (plan RQ4.5, AC-RQ4.5.7, built in RQ0.7; bench/README.md): the branch's tip
+# (main's, at night), built naming its commit, measured on a runner alone, open loop at the power point,
+# its p99 from each operation's intended start; a point of record is fed to kiln's metrics
+# ($KILN_METRICS, kiln's docs/ci.md W16-R07). Then the series kiln keeps of it, one per fingerprint, a
+# point a night for up to a year, goes to the change-point detector, which reads each series alone and
+# fails the run on a change for the worse that bench/changes.toml does not acknowledge, naming its
+# commit range and the last commit of the history it read.
 #
-# Until RQ1 brings `reliquary_pull` (AC-T9.1.4), the bench measured is `judge`, the tool's own judgment:
+# Until RQ4.5 brings `reliquary_pull` (AC-T9.1.4), the bench measured is `judge`, the tool's own judgment:
 # Reliquary code with no setting a person picks. The schedule is the slot the person books on kiln's
 # bench calendar (CLAUDE.md, "Working here"); until then it runs by hand.
 name: nightly

@@ -756,7 +756,7 @@ mod tests {
     }
 
     /// The change-point command reads kiln's answer, alerts on an unacknowledged worsening with its
-    /// commit range, and stays quiet once it is acknowledged (AC-RQ0.7.6, T-RQ0.7.10).
+    /// commit range, and stays quiet once it is acknowledged (AC-RQ4.5.7, T-RQ0.7.10).
     #[test]
     fn a_worsening_alerts_with_its_range_until_acknowledged() {
         let dir = tempfile::tempdir().unwrap();

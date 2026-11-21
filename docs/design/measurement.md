@@ -235,7 +235,9 @@ not hold the commit a bisection finds.
 
 ## Open
 
-- **A fed night, and an alert.** Both workflows have run in kiln CI (M7, M8), but no night has been
+- **A fed night, and an alert (RQ4.5's now).** By the person's word of 2026-11-21 the nightly alarm is
+  RQ4.5's to show (AC-RQ4.5.7), where `reliquary_pull` gives it a number worth guarding; RQ0.7 built
+  the run and the detector. Both workflows have run in kiln CI (M7, M8), but no night has been
   fed: kiln's arm64 Mac runners ran at load averages of 4.5 to 7.9 when the nightly ran by hand, so its
   records were not of record. Scheduled nights run from main on the bench host, in a slot the person
   books on kiln's bench calendar; the bench host's one-minute load average read 84 at 03:00 UTC on

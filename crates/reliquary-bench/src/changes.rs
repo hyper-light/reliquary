@@ -1,4 +1,4 @@
-//! Where a series of nightly measurements changed, and between which commits (AC-RQ0.7.6, AC-RQ0.7.8):
+//! Where a series of nightly measurements changed, and between which commits (AC-RQ4.5.7, AC-RQ0.7.8):
 //! E-Divisive means (Matteson and James, "A Nonparametric Approach for Multiple Change Point Analysis
 //! of Multivariate Data", JASA 109(505), 2014), the method MongoDB's CI moved to from fixed thresholds
 //! (Daly et al., ICPE '20; research/06 F50).
@@ -349,7 +349,7 @@ mod tests {
         assert!(first[0].median_after > first[0].median_before);
     }
 
-    /// AC-RQ0.7.6: a steady series has no change point; two shifts are both found.
+    /// AC-RQ4.5.7: a steady series has no change point; two shifts are both found.
     #[test]
     fn a_steady_series_has_none_and_two_shifts_give_two() {
         let mut rng = SplitMix64::new(37);
@@ -407,7 +407,7 @@ mod tests {
         assert!((got.q - best.0).abs() < 1e-9 * best.0.abs());
     }
 
-    /// AC-RQ0.7.6: three a side is the fewest at which a split can reach 5%; a series too long or not a
+    /// AC-RQ4.5.7: three a side is the fewest at which a split can reach 5%; a series too long or not a
     /// number is refused, typed.
     #[test]
     fn the_sides_bound_and_refusals() {
@@ -427,7 +427,7 @@ mod tests {
         assert_eq!(changes(&[]).unwrap(), vec![]);
     }
 
-    /// AC-RQ0.7.6: a nightly series keeps one point a day, the day's last, in time order.
+    /// AC-RQ4.5.7: a nightly series keeps one point a day, the day's last, in time order.
     #[test]
     fn a_nightly_series_keeps_each_days_last_point() {
         let m = |sha: &str, value: f64, ts: i64| Measured {

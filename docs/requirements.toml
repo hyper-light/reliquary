@@ -380,7 +380,7 @@ criteria = [
   { id = "AC-RQ0.7.3", text = "An A|A run (the same build twice) reports a difference no more often than the tests' stated level, 5%, the level Mantle's measurement design uses." },
   { id = "AC-RQ0.7.4", text = "A record made above the load rule is marked \"not of record\" and cannot be cited by an acceptance criterion." },
   { id = "AC-RQ0.7.5", text = "Open-loop load generation records each operation's intended start, and latency is measured from it." },
-  { id = "AC-RQ0.7.6", text = "CI gates instruction counts for the benches it names, and a nightly run feeds latency to a change-point detector whose alert names the commit range." },
+  { id = "AC-RQ0.7.6", text = "CI gates instruction counts for the benches it names." },
   { id = "AC-RQ0.7.7", text = "How many builds, process starts and rounds a point is measured over follows from the variation measured at each level and the interval asked for; the record states each count and why, and no \"best of N\" has a picked N." },
   { id = "AC-RQ0.7.8", text = "The change-point detector gives the same verdict on the same history every time it is run." },
 ]
@@ -1327,6 +1327,7 @@ criteria = [
   { id = "AC-RQ4.5.4", text = "A redirect's URL lets its holder read exactly that blob, for a life derived as RQ3.5's grants are, and carries no credential of the client's across hosts." },
   { id = "AC-RQ4.5.5", text = "Every stock client in RQ1.10's matrix follows the redirect and verifies; one that cannot is served by relay, decided from what it says of itself or how it behaves, and the list is in the record." },
   { id = "AC-RQ4.5.6", text = "Blob `HEAD` and range `GET` meet the same bar as whole `GET` at their own points of the matrix." },
+  { id = "AC-RQ4.5.7", text = "A nightly run measures bench `reliquary_pull`'s p99 on the bench host in its slot and feeds it to the change-point detector (`reliquary bench changes`, RQ0.7), whose alert names the commit range." },
 ]
 tests = [
   { id = "T-RQ4.5.1", text = "[happy] `GET` blobs of every size in the matrix by each path → identical bytes; digests verify." },
@@ -1338,6 +1339,7 @@ tests = [
   { id = "T-RQ4.5.7", text = "[hostile] A client that follows redirects and sends its registry token to the storage host → the storage host ignores it, and it is not logged." },
   { id = "T-RQ4.5.8", text = "[exhaustion] Relay readers past the relay's admitted bytes in flight → refused with `Retry-After`; redirected readers are unaffected." },
   { id = "T-RQ4.5.9", text = "[perf] Bench `reliquary_pull` across the matrix, of record → the bar's verdict at every point." },
+  { id = "T-RQ4.5.10", text = "[perf] A slowdown planted on main once three nights are fed (M8's fewest on each side) → by the sixth fed night the detector's alert names its commit range; the slowdown is reverted after." },
 ]
 
 [[own]]

@@ -90,7 +90,7 @@ leases from Veil. Kiln's registry moves here (plan RQ2.9); kiln vendors Reliquar
 | A derived, per-node catalog index | D20 | RQ6.2 | by data |
 | The house's runtime, codecs and simulator | D21 | RQ0.1, RQ1.6 | decided; open |
 | Skills and MCP servers | D22 | RQ5 | decided; open, with Shards' owner |
-| Measurement and A|B | D23, [`measurement.md`](measurement.md) M1 to M8 | RQ0.7 | built, on branch rq0-ground, not merged; the gate and the nightly ran by hand in kiln CI on 2026-11-21; no night fed yet |
+| Measurement and A|B | D23, [`measurement.md`](measurement.md) M1 to M8 | RQ0.7 | built, on branch rq0-ground, not merged; the gate and the nightly ran by hand in kiln CI on 2026-11-21; the nightly alarm moved to RQ4.5 (the person, 2026-11-21) |
 | Crates | D24 | each phase | decided; open |
 | Identity proved, not stored | D25 | RQ7.11, RQ7.12 | decided; open |
 | Audit in the change's own commit; events from the change feed | D26 | RQ7.13, RQ7.14 | decided; open |

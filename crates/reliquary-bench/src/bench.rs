@@ -1,8 +1,9 @@
-//! The benches a worker runs, by name. Until the registry has operations of its own (RQ1 brings
-//! `reliquary_pull`, the bench AC-T9.1.4 names), these are the tool's own: `spin`, a CPU operation of a
-//! stated amount of work whose settings plant a slowdown or a variation between process starts, so the
-//! tool's verdicts can be checked against a known truth; and `judge`, the tool's judgment of a point's
-//! rounds, a real piece of Reliquary whose instruction count CI gates (`bench/gated.toml`).
+//! The benches a worker runs, by name. Until the registry has operations of its own (RQ1) and a bench
+//! of them (`reliquary_pull`, RQ4.5, the bench AC-T9.1.4 names), these are the tool's own: `spin`, a
+//! CPU operation of a stated amount of work whose settings plant a slowdown or a variation between
+//! process starts, so the tool's verdicts can be checked against a known truth; and `judge`, the tool's
+//! judgment of a point's rounds, a real piece of Reliquary whose instruction count CI gates
+//! (`bench/gated.toml`).
 
 use std::collections::BTreeMap;
 

@@ -16,7 +16,7 @@ the design is [`docs/design/measurement.md`](../docs/design/measurement.md)).
 - **`changes.toml`**: the change points the nightly run's detector found that a person has looked at,
   each by its commit range with why. The nightly run (`.kiln/nightly.yaml`) feeds each night's latency
   to kiln's metrics, reads back the series, and alerts on a change for the worse that is not here
-  (AC-RQ0.7.6).
+  (AC-RQ4.5.7: plan RQ4.5 measures `reliquary_pull` nightly; RQ0.7 built the run and the detector).
 
 ## Making a record of record
 
