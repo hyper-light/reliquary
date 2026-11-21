@@ -78,7 +78,7 @@ x86_64 and Linux arm64, `.kiln/platforms.yaml`) and the evidence its requirement
   both architectures (`.kiln/distros.yaml`). `crates/reliquary/tests/gates.rs` plants what each gate must
   refuse (T-RQ0.3.1 to T-RQ0.3.7). The new CLAUDE.md Gates lines wait for the person's word.
 - **The measurement tool, `reliquary bench`** (plan RQ0.7; `docs/design/measurement.md`, research/07;
-  built, not committed; its workflows not yet live). `crates/reliquary-bench` judges a point's units as
+  built, on branch rq0-ground, not merged; its two workflows ran in kiln CI on 2026-11-21). `crates/reliquary-bench` judges a point's units as
   Mantle's design does (order in time, one state or two, medians with order-statistic intervals, tails
   where enough operations support them, dashes where not, no mean), sizes a round by a count of
   operations, sets how many builds, process starts and rounds a point needs from the variation measured
@@ -88,17 +88,24 @@ x86_64 and Linux arm64, `.kiln/platforms.yaml`) and the evidence its requirement
   (E-Divisive, seeded from the history). Its tests cover T-RQ0.7.1 to .10; simulated A|A runs report a
   difference 0.03% to 0.29% of the time against the 5% AC-RQ0.7.3 allows. `.kiln/instructions.yaml`
   gates `bench/gated.toml`'s instruction counts under cachegrind on every change, and
-  `.kiln/nightly.yaml` feeds the nightly p99 to kiln's metrics and the detector; both pass kiln's
-  validator, and neither has run: they run once pushed, the nightly in a slot the person books on kiln's
-  bench calendar. Checked on macOS arm64: lints, the production check, every test of `reliquary` and
+  `.kiln/nightly.yaml` feeds the nightly p99 to kiln's metrics and the detector. Both ran by hand in
+  kiln CI on branch rq0-ground on 2026-11-21: the gate passed twice in a Linux container, `judge` not
+  separated between a commit and its parent (runs 01a1fc07f950, 01a1fc188d9a); the nightly built,
+  measured open loop at the power point on an arm64 Mac runner, held its record not of record by the
+  load rule (a load average of 7.90), fed nothing, and its detector read kiln's series through the
+  metrics API (run 01a1fc1f55aa). No night is fed yet: scheduled nights take the bench host in a slot
+  the person books on kiln's bench calendar. Checked on macOS arm64: lints, the production check, every test of `reliquary` and
   `reliquary-bench` (the end-to-end `tests/bench.rs` among them), and the gate live (ten A|A gates all
   passed; three gates of a build planted with 10% more work all failed). On Windows x86_64, before the
   last fixes: lints, the production check, the release build, real runs; jupiter took no run after.
   On Linux, in a Debian 13 arm64 container on the Mac (kiln's one Linux runner, adacachy, runs
   production, and `fedora` is stale in kiln): the crate's tests, the release build, and the cachegrind
   gate live (three A|A gates passed; two gates of a separate build with 10% more work failed, and passed
-  when accepted). The detector read kiln's own metrics answer for `hyper-light/kiln`. No record of record exists yet: one needs a build of a clean commit on a quiet machine;
-  `bench/records/` keeps one run not of record, as evidence of the format.
+  when accepted). The detector read kiln's own metrics answer for `hyper-light/kiln`. The first record of record
+  (AC-RQ0.7.4) is `bench/records/2026-11-21T02-30-24Z-judge-point.json`: `judge`'s p99 from intended
+  starts, built from b0f11d6c on an Apple M4 Max Mac Studio and of record at all 17 readings, 15 process
+  starts of 23 rounds of 368 operations, a median p99 of 10.09 µs within 3.84%; `bench/records/` also
+  keeps one run not of record, as evidence of the format.
 - **The reference model and the differential harness** (plan RQ0.5; `docs/design/model.md` H1 to H14,
   research/10; built, not committed). `crates/reliquary-api` holds the registry's meaning as a pure
   model: every endpoint of distribution spec v1.1.1 and the upload cancel of its `main`, with the spec's

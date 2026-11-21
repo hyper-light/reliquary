@@ -180,7 +180,11 @@ cachegrind (Debian 13 arm64 in a container on the same Mac, Valgrind 3.24.0, 202
 of `judge` passed, both arms judged, about 44,060 instructions an operation within ±30, one operation a
 process start as the start's count varied by 13 to 19 instructions; two gates against a separate build of
 `spin` with 10% more iterations failed, A about 7,560 and B about 8,325 instructions an operation, and the
-same with `--accept spin` passed as accepted.
+same with `--accept spin` passed as accepted. In kiln CI (`.kiln/instructions.yaml` run by hand on
+branch rq0-ground, 2026-11-21, in a `rust:1.99.1-trixie` container on an arm64 Mac runner): two gates of
+a commit against its parent, neither touching code, both passed with both arms judged and not separated,
+`judge` at 44,012 to 44,083 instructions an operation and one operation a process start (runs
+01a1fc07f950 and 01a1fc188d9a).
 
 **Falsified by.** A gate that fails a change whose code path does not touch the gated bench more often
 than its 5% level, by its own A|A runs; or a rise the nightly finds that the gate passed.
@@ -208,17 +212,22 @@ not there fails the run.
 **Evidence.** `changes.rs`: a planted shift is found at its commit range, the same twice (T-RQ0.7.10);
 two shifts give two; a steady series none; the search equals `Q̂`'s definition over every split.
 `cli.rs`: kiln's answer read, an unacknowledged worsening alerts with its range and history, an
-acknowledged one does not.
+acknowledged one does not. In kiln CI (`.kiln/nightly.yaml` run by hand on branch rq0-ground, run
+01a1fc1f55aa, 2026-11-21): the build of the branch's tip, the open-loop run at the power point (161,651.7
+operations a second, half the closed-loop rate) on an arm64 Mac runner, and its record, which the load
+rule held not of record (a load average of 7.90 at all 30 readings), so nothing was fed; then the
+detector's job, in a container, read kiln's series through the metrics API with the job's token and
+said that no night had been fed yet.
 
 **Falsified by.** A change point that moves between two runs over one history; an alert whose range does
 not hold the commit a bisection finds.
 
 ## Open
 
-- **Live.** The two workflows are validated by kiln (`ci.workflows.validate`, no diagnostics, labels
-  included) and the tool is tested, but neither workflow has run: they run once the person pushes them.
-  The nightly needs its slot on kiln's bench calendar and the metrics API's answer as the job token reads
-  it, which only a live run shows.
+- **A fed night.** Both workflows have run in kiln CI (M7, M8), but no night has been fed: kiln's
+  arm64 Mac runners ran at load averages of 4.5 to 7.9 when the nightly ran by hand, so its records
+  were not of record. Scheduled nights take the bench host in a slot the person books on kiln's bench
+  calendar; the detector's first verdict over a fed series waits for those nights.
 - **Builds as a level.** The tool measures builds given to it; making builds that differ in code layout
   (a linker's section order, STABILIZER's re-randomization) is not built.
 - **A container's own pressure.** In a container the load rule reads the host's average; the
