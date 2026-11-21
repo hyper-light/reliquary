@@ -10,9 +10,9 @@ the design is [`docs/design/measurement.md`](../docs/design/measurement.md)).
   criterion cites only a record of record; `crates/reliquary-bench/tests/records.rs` fails the gate
   on a citation of any other (AC-RQ0.7.4).
 - **`gated.toml`**: the benches whose instructions an operation CI gates on every change, the change
-  (B) against its base (A), interleaved, counted by cachegrind (AC-RQ0.7.6; `.kiln/ci.yaml`,
-  `instructions`). A bench whose B rises, its interval separated above A's, fails the gate unless the
-  change's commit message carries `Bench-accepted: <bench>: <why>`.
+  (B) against its base (A), interleaved, counted by cachegrind (AC-RQ0.7.6; `.kiln/instructions.yaml`).
+  A bench whose B rises, its interval separated above A's, fails the gate unless a commit of the change
+  carries `Bench-accepted: <bench>: <why>`.
 - **`changes.toml`**: the change points the nightly run's detector found that a person has looked at,
   each by its commit range with why. The nightly run (`.kiln/nightly.yaml`) feeds each night's latency
   to kiln's metrics, reads back the series, and alerts on a change for the worse that is not here
@@ -26,9 +26,11 @@ bash scripts/bench-build.sh <commit> ~/.cache/reliquary-bench/b    # a release b
   --machine <name> --record bench/records
 ```
 
-On a quiet machine (CLAUDE.md, "Working here": fedora or jupiter, in a slot of kiln's bench calendar),
-never one that is building. A run on a busy machine still writes its record, marked not of record
-with the load that made it so; it can be kept as evidence and is never cited.
+On a quiet machine, never one that is building (CLAUDE.md, "Working here": heavy work goes to fedora
+or jupiter, and the bench host, which runs production, takes a benchmark only in its slot on kiln's
+bench calendar). Windows has no load average, so a record made there, jupiter's, is never of record. A
+run on a busy machine still writes its record, marked not of record with the load that made it so; it
+can be kept as evidence and is never cited.
 
 `reliquary bench ab` compares two builds (`--a` and `--b`, each built by the script) or two settings
 of one (`--a-set`, `--b-set`), and gives "A better", "B better" or "not separated" with both intervals.

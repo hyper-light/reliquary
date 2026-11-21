@@ -187,10 +187,13 @@ than its 5% level, by its own A|A runs; or a rise the nightly finds that the gat
 
 ## M8. A nightly series and its change points
 
-**Decision.** `.kiln/nightly.yaml` measures main's tip on the bench host alone, open loop at the power
-point, and feeds the p99's median to kiln's metrics when the record is of record. kiln keeps the series
-per runner fingerprint (kiln's docs/ci.md W16-R07), so a series compares one class of hardware with
-itself. `reliquary bench changes` reads it back, one point a UTC day, at most 366, and runs E-Divisive
+**Decision.** `.kiln/nightly.yaml` measures main's tip each night on the bench host alone, in its slot
+on kiln's bench calendar, open loop at the power point, and feeds the p99's median to kiln's metrics
+when the record is of record. A run by hand has no slot, and the bench host runs production
+(CLAUDE.md, "Working here"), so it takes a whole arm64 Mac runner instead. kiln keeps the series per
+runner fingerprint (kiln's docs/ci.md W16-R07: OS, architecture, CPU model, kernel and executor), so a
+series compares one class of hardware with itself, and a run by hand never joins the bench host's.
+`reliquary bench changes` reads it back, one point a UTC day, at most 366, and runs E-Divisive
 means (Matteson and James; α = 1; the joint `τ, κ` search; bisection as a loop; research/07 F1 to F5):
 a split is kept when no more than 5% of 199 shuffles within its segments reach its divergence (`ecp`'s
 defaults, F6), each side at least three points, the fewest at which a two-sample test can reach 5% and

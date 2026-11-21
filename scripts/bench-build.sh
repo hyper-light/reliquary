@@ -26,9 +26,15 @@ trap cleanup EXIT
 cleanup
 git worktree prune
 git worktree add --detach "${tree:?}" "$commit" >/dev/null
+# The compiler the commit's rust-toolchain.toml pins, named to rustup so that it builds for this
+# machine's own target alone: the other targets the file names are the gates' lints, which a benchmark's
+# build does not need, and installing them failed on a machine whose rustup held part of one (kiln run
+# 01a1fc07fb5a, 2026-11-21).
+channel=$(sed -n 's/^channel *= *"\(.*\)"$/\1/p' "$tree/rust-toolchain.toml")
 (
   cd -- "$tree"
-  RELIQUARY_COMMIT=$commit nice -n 10 cargo build --release --locked -p reliquary --bin reliquary
+  RUSTUP_TOOLCHAIN=${channel:?rust-toolchain.toml names no channel} RELIQUARY_COMMIT=$commit \
+    nice -n 10 cargo build --release --locked -p reliquary --bin reliquary
 )
 target=${CARGO_TARGET_DIR:-$tree/target}
 cp -- "$target/release/reliquary" "$out/reliquary"
