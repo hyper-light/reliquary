@@ -4,3 +4,202 @@ format = 1
 
 # Reliquary's gate, run after a re-vendor.
 gate = ["bash scripts/gates.sh"]
+
+# The kiln revision whose vendor/MANIFEST.toml these pins follow (AC-RQ0.1.2): a project kiln holds is
+# here at kiln's commit, with kiln's recorded changes to it but those of kiln's layout alone
+# (`Kiln-only:`). crates/reliquary/tests/vendored.rs reads kiln's manifest and changes at this commit and
+# holds these to them. scripts/vendor.py reads no key of this table.
+[kiln]
+repository = "https://github.com/hyper-light/kiln"
+commit = "e64eeb7cb29ba8b49e733f49ee89e37fb96bc923"
+
+# hyper-raft (hyper-light), at the revision kiln vendors it (kiln's vendor/MANIFEST.toml), so kiln, Mantle,
+# Amphora's store and Reliquary hold one hyper-raft: the runtime Reliquary's shells run on (hyper-rt), the
+# deterministic world its simulations run in (hyper-sim), what a run costs (hyper-measure, for tests and
+# benchmarks), the native door's transport (hyper-transport on hyper-quic, TLS 1.3 by hyper-tls, driven on
+# hyper-rt by hyper-rt-transport with hyper-datagram beside it), waits learned from a path (hyper-timing),
+# and what Amphora's store is built on (hyper-durable, hyper-raft, hyper-log and hyper-block, with
+# hyper-liveness and hyper-seal) (docs/design/plan/phase-00-ground.md, RQ0.1). hyper-raft has no -api crate
+# for Reliquary to depend on (CLAUDE.md §9), so only what Reliquary compiles is taken: those crates, each
+# whole but hyper-tls's tests and test certificate authority (9 MB only its own tests read, as Hex leaves
+# them out), with the workspace manifest their packages inherit from and its LICENSE, depended on by name
+# and patched to this copy (Cargo.toml [patch.crates-io]), as kiln patches the same names. When hyper-raft
+# publishes these behind an -api crate, Reliquary depends on that by name and this entry goes; until then
+# each crate Reliquary names is a line of [projects.hyper-raft.api_exceptions] below.
+[projects.hyper-raft]
+kind = "git"
+repository = "https://github.com/hyper-light/hyper-raft"
+commit = "e0613f524b0df198cc61dc1e82b33c22d604cf7b"
+path = "vendor/hyper-raft"
+take = [
+  "Cargo.toml",
+  "LICENSE",
+  "crates/hyper-block",
+  "crates/hyper-datagram",
+  "crates/hyper-durable",
+  "crates/hyper-liveness",
+  "crates/hyper-log",
+  "crates/hyper-measure",
+  "crates/hyper-quic",
+  "crates/hyper-raft",
+  "crates/hyper-rt",
+  "crates/hyper-rt-transport",
+  "crates/hyper-seal",
+  "crates/hyper-sim",
+  "crates/hyper-timing",
+  "crates/hyper-tls",
+  "crates/hyper-transport",
+]
+exclude = ["crates/hyper-tls/test-ca", "crates/hyper-tls/tests"]
+own = ["UPSTREAM.md"]
+
+# The -api rule's exceptions (CLAUDE.md §9), a line each: the crate Reliquary names, why, and what ends it.
+[projects.hyper-raft.api_exceptions]
+hyper-rt = "the runtime Reliquary's shells run on (architecture D21); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+hyper-rt-transport = "drives the native door's transport on hyper-rt (RQ3.1); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+hyper-sim = "the deterministic world Reliquary's simulations run in (RQ0.6); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+hyper-measure = "what a run allocates, for Reliquary's tests and benchmarks (RQ0.7); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+hyper-tls = "TLS 1.3 under the native door (architecture D1, RQ3.2); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+hyper-quic = "QUIC under the native door (architecture D1, RQ3.1); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+hyper-transport = "the native door's lanes, exchanges and typed refusals (RQ3.1); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+hyper-timing = "waits learned from a path's own answers (RQ0.8); hyper-raft has no -api crate for it. Ends when hyper-raft publishes one"
+
+# aws-lc-rs, the cryptography under hyper-tls, hyper-quic, hyper-transport and Mantle, as kiln links it: its
+# release v1.18.2 with Mantle's changes, so Mantle builds on this one copy; aws-lc-sys stays crates.io's
+# 0.46.0, built as kiln builds it (.cargo/config.toml). The crate's folder and the repository's LICENSE. Left
+# out: the crate's third_party/, the NIST vectors only its own tests read.
+[projects.aws-lc-rs]
+kind = "git"
+repository = "https://github.com/aws/aws-lc-rs"
+commit = "9df497501436596d4da77109217806b3af7f56cb"
+path = "vendor/aws-lc-rs"
+take = ["LICENSE", "aws-lc-rs"]
+exclude = ["aws-lc-rs/third_party"]
+own = ["UPSTREAM.md"]
+
+# Mantle (hyper-light), where Reliquary keeps its bytes, at the revision kiln vendors it (kiln's
+# vendor/MANIFEST.toml): the client a node reaches Mantle's native door with (mantle-client, with
+# mantle-protocol's messages, mantle-s3's checksums a put is held to, and mantle-codec), Mantle's HTTP/1.1
+# codec, I/O-free and fuzzed (mantle-http), and its CRCs (mantle-crc) (RQ0.1). Its crates take hyper-raft's by
+# path, which kiln's first recorded change points at the copy beside this one (vendor/mantle/UPSTREAM.md).
+# Mantle has no -api crate for Reliquary to depend on (CLAUDE.md §9), so only what Reliquary compiles is
+# taken: those six crates, whole, with the workspace manifest their packages inherit from, its Cargo.lock and
+# its LICENSE, depended on by name and patched to this copy (Cargo.toml [patch.crates-io]), as kiln patches
+# the same names; and of eight more crates, their manifests alone, which the same change edits and nothing
+# here builds. When Mantle publishes these behind an -api crate, Reliquary depends on that by name and this
+# entry goes; until then each crate Reliquary names is a line of [projects.mantle.api_exceptions] below.
+[projects.mantle]
+kind = "git"
+repository = "https://github.com/hyper-light/mantle"
+commit = "87ab09e1c94149c7b669cb0de5975e228125c867"
+path = "vendor/mantle"
+take = [
+  "Cargo.lock",
+  "Cargo.toml",
+  "LICENSE",
+  "crates/cert/Cargo.toml",
+  "crates/chunk/Cargo.toml",
+  "crates/client",
+  "crates/codec",
+  "crates/crc",
+  "crates/disk/Cargo.toml",
+  "crates/ec/Cargo.toml",
+  "crates/engine/Cargo.toml",
+  "crates/http",
+  "crates/mantle/Cargo.toml",
+  "crates/node/Cargo.toml",
+  "crates/protocol",
+  "crates/range/Cargo.toml",
+  "crates/s3",
+]
+own = ["UPSTREAM.md"]
+
+# The -api rule's exceptions (CLAUDE.md §9), a line each: the crate Reliquary names, why, and what ends it.
+[projects.mantle.api_exceptions]
+mantle-client = "how a node reaches Mantle's native door (architecture D4, RQ1.8); Mantle has no -api crate. Ends when Mantle publishes one"
+mantle-protocol = "the native door's messages, classes and bounds (RQ3.5); Mantle has no -api crate. Ends when Mantle publishes one"
+mantle-http = "the HTTP/1.1 codec under the OCI door (RQ1.6); Mantle has no -api crate. Ends when Mantle publishes one"
+mantle-crc = "the CRCs a chunk and a range are checked by (RQ10.2); Mantle has no -api crate. Ends when Mantle publishes one"
+
+# Amphora (hyper-light), where Reliquary keeps its records (RQ0.1): amphora-api, the trait Reliquary reaches
+# records through (Records, RQ0.4), and its embedded store, which keeps them in Reliquary's own process
+# (RQ1.8), with the engine the store is built on (crates/engine*: Turso's four crates, Amphora's own since),
+# at the head of Amphora's main. kiln holds no Amphora at [kiln]'s commit, so this pin is Amphora's own
+# (`kiln_holds_none`, which the pin test reads). Amphora's record of what it vendors is taken with it, so its
+# pins are held to Reliquary's hyper-raft by a recorded change, as kiln holds Hex's; the store's two calls
+# of hyper-durable that Amphora's own change to hyper-raft adds are made on kiln's hyper-durable by a second
+# (vendor/amphora/UPSTREAM.md). Amphora's store has no -api crate for Reliquary to depend on (CLAUDE.md §9):
+# amphora-api is the trait, not a store. So the store is taken and depended on by name and patched to this
+# copy (Cargo.toml [patch.crates-io]); when Amphora publishes an embedded store behind its -api crate,
+# Reliquary depends on that by name and the store's line below goes.
+[projects.amphora]
+kind = "git"
+repository = "https://github.com/hyper-light/amphora"
+commit = "db991a05d1769648d1de0390ac80b04c979d150e"
+path = "vendor/amphora"
+take = [
+  "Cargo.toml",
+  "LICENSE",
+  "crates/amphora",
+  "crates/api",
+  "crates/engine",
+  "crates/engine-ext",
+  "crates/engine-macros",
+  "crates/engine-parser",
+  "vendor/MANIFEST.toml",
+  "vendor/patches",
+]
+own = ["UPSTREAM.md"]
+kiln_holds_none = "kiln vendors no Amphora at [kiln]'s commit. Ends when kiln takes Amphora: this pin then follows kiln's"
+
+# The -api rule's exceptions (CLAUDE.md §9), a line each: the crate Reliquary names, why, and what ends it.
+[projects.amphora.api_exceptions]
+amphora = "the embedded store Reliquary keeps its records in, in its own process (architecture D2, RQ1.8); amphora-api is the trait, not a store. Ends when Amphora publishes an embedded store behind an -api crate"
+
+# Quiver (hyper-light), the topic store Reliquary's events go on (architecture D26): quiver-api, the trait
+# Reliquary reaches its events through (Topics, RQ0.4; docs/design/plan/phase-00-ground.md), with its
+# simulator and conformance suite, at the revision kiln vendors it (kiln's vendor/MANIFEST.toml). quiver-api
+# is Quiver's -api crate (CLAUDE.md §9), so Reliquary names it by the rule and it has no exception line: it
+# alone is taken, whole, with the workspace manifest its package inherits from and its LICENSE, depended on
+# by name and patched to this copy (Cargo.toml [patch.crates-io]), as kiln patches the same name. Quiver's
+# record of what it vendors (its vendor/MANIFEST.toml and vendor/patches) is taken with it, so its pins are
+# held to this manifest's (scripts/vendor.py's holds_its_pins), as kiln holds them: kiln's three recorded
+# changes move its hyper-raft pin to kiln's and record kiln's changes to hyper-raft and to Focal's bus
+# (vendor/quiver/UPSTREAM.md).
+[projects.quiver]
+kind = "git"
+repository = "https://github.com/hyper-light/quiver"
+commit = "966ea139a18d590afd64cc3e30ba3807302d42b1"
+path = "vendor/quiver"
+take = [
+  "Cargo.toml",
+  "LICENSE",
+  "crates/quiver-api",
+  "vendor/MANIFEST.toml",
+  "vendor/patches",
+]
+own = ["UPSTREAM.md"]
+
+# Focal's event bus (hyper-light), which Quiver is built on, at the revision kiln vendors it (kiln's
+# vendor/MANIFEST.toml) and Quiver's record names. Nothing in Reliquary links focal-bus: it is here because
+# Quiver's record of what it vendors names it, and a product whose record this repository holds takes each
+# hyper-light product it names at this manifest's one copy, with the same recorded changes (scripts/vendor.py
+# check). So only the files kiln's six recorded changes touch are taken, with the LICENSE, and the changes
+# are kiln's, byte for byte (vendor/focal-bus/UPSTREAM.md); nothing here is built, and Cargo.toml patches no
+# name to this copy. When Reliquary links the bus, its crates are taken whole, as kiln takes them.
+[projects.focal-bus]
+kind = "git"
+repository = "https://github.com/hyper-light/focal"
+commit = "9aded7cdf0a596f35039acb9b4e610c52f9d1f0a"
+path = "vendor/focal-bus"
+take = [
+  "Cargo.toml",
+  "LICENSE",
+  "crates/focal-bus/Cargo.toml",
+  "crates/focal-bus/src/member.rs",
+  "crates/focal-bus/src/pki.rs",
+  "crates/focal-memory/src/budget.rs",
+  "crates/focal-memory/src/disk.rs",
+  "crates/focal-memory/src/owner.rs",
+]
+own = ["UPSTREAM.md"]

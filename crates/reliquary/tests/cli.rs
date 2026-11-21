@@ -21,6 +21,8 @@ fn run(args: &[&str]) -> Output {
         .expect("the binary runs")
 }
 
+/// Run `reliquary --version` → the name, the version and the commit it was built from, on stdout,
+/// status 0 (T-RQ1.9.8).
 #[test]
 fn version_prints_the_name_version_and_commit() {
     let out = run(&["--version"]);
@@ -33,6 +35,7 @@ fn version_prints_the_name_version_and_commit() {
     assert!(text.ends_with(")\n"), "{text}");
 }
 
+/// Run `reliquary --help` → what it is and its usage, on stdout, status 0 (T-RQ1.9.8).
 #[test]
 fn help_prints_what_it_is_and_the_usage() {
     let out = run(&["--help"]);
@@ -42,6 +45,8 @@ fn help_prints_what_it_is_and_the_usage() {
     assert!(text.contains("usage: reliquary"), "{text}");
 }
 
+/// Run it with an argument it doesn't take → one line naming it, then the usage, on stderr, status 2
+/// (T-RQ1.9.2).
 #[test]
 fn an_unknown_argument_is_refused_with_the_usage() {
     let out = run(&["--frobnicate"]);
@@ -51,6 +56,7 @@ fn an_unknown_argument_is_refused_with_the_usage() {
     assert!(text.contains("usage: reliquary"), "{text}");
 }
 
+/// Run it with no argument → the usage on stderr, status 2 (T-RQ1.9.2).
 #[test]
 fn no_argument_prints_the_usage_and_fails() {
     let out = run(&[]);
@@ -62,6 +68,7 @@ fn no_argument_prints_the_usage_and_fails() {
     );
 }
 
+/// Give it an argument that isn't Unicode → refused, saying so, status 2, never a panic (T-RQ1.9.2).
 #[test]
 fn an_argument_that_isnt_unicode_is_refused_not_a_panic() {
     assert_eq!(reliquary::reply(&[None]).status, 2);

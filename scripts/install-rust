@@ -1,0 +1,36 @@
+#!/bin/sh
+# Installs rustup 1.29.3 for this Linux host, by its digest, then the toolchain rust-toolchain.toml
+# pins, and prints the directory that holds cargo, for PATH: the Linux distributions' containers of
+# kiln CI (.kiln/distros.yaml; plan RQ0.3, AC-RQ0.3.7), whose images carry no Rust. Digests from
+# https://static.rust-lang.org/rustup/archive/1.29.3/<host>/rustup-init.sha256. Run from the
+# repository, whose rust-toolchain.toml names the toolchain.
+set -eu
+version=1.29.3
+libc=gnu
+if [ -e /etc/alpine-release ] || ldd --version 2>&1 | grep -qi musl; then
+	libc=musl
+fi
+case "$(uname -m)-$libc" in
+	x86_64-gnu) sum=b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55 ;;
+	aarch64-gnu) sum=9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282 ;;
+	x86_64-musl) sum=1552169aba2836777136ccff7a381e95c17233b5d8250cd5e10ae3cb971bfcfc ;;
+	aarch64-musl) sum=956deacdc27ab82ae7ac821d5d3e9e95e4795d476d17efe99743bb8531ca1031 ;;
+	*) echo "install-rust: no pinned rustup for $(uname -m) with $libc" >&2; exit 1 ;;
+esac
+host="$(uname -m)-unknown-linux-$libc"
+export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
+	home="${RUNNER_TEMP:-${XDG_CACHE_HOME:-$HOME/.cache}/reliquary/rustup}"
+	mkdir -p "$home"
+	init="$home/rustup-init-$version-$host"
+	curl -fsSL --retry 5 --retry-all-errors --retry-delay 10 -o "$init" \
+		"https://static.rust-lang.org/rustup/archive/$version/$host/rustup-init"
+	# The check's own words go to stderr: stdout is the directory alone.
+	echo "$sum  $init" | sha256sum -c - >&2
+	chmod +x "$init"
+	"$init" -y --no-modify-path --profile minimal --default-toolchain none >&2
+	rm -f -- "${init:?}"
+fi
+# The toolchain, its components and targets as rust-toolchain.toml names them.
+"$CARGO_HOME/bin/rustup" toolchain install >&2
+echo "$CARGO_HOME/bin"

@@ -1,0 +1,51 @@
+[package]
+name = "reliquary-core"
+description = "Reliquary's sans-IO cores and the seams it reaches other products through: each seam's trait, its simulator, and the conformance suite every implementation passes"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+# Records: Amphora's trait, which Reliquary keeps its records through (architecture D2), and its
+# bounds, which the records simulator holds a transaction to.
+amphora-api = "0.1"
+# SHA-256, which a put's whole is held to, and HMAC-SHA256, which the bytes simulator signs its
+# grants with: the cryptography kiln, Mantle and hyper-raft link.
+aws-lc-rs = "1.18"
+# The event ring (observe::ring): a bounded lock-free queue whose force_push lets the oldest line go
+# (plan RQ0.9, T-RQ0.9.5). kiln's own log-line queue uses this crate (kiln's
+# crates/kiln/src/log_lines.rs), and it is already in Cargo.lock through `polling`.
+concurrent-queue = "2.5"
+# Events: Quiver's trait, which Reliquary publishes its events through (architecture D26), with
+# Quiver's own simulator, which the topics simulator wraps.
+quiver-api = "0.1"
+# The simulators' state: a lock that cannot be poisoned, so a panicking test thread leaves no lock
+# that later calls would have to refuse.
+parking_lot = "0.12"
+thiserror = "2"
+# Events go through tracing, as kiln's bridge reads them (docs/design/observability.md, O4).
+tracing = "0.1"
+# The event ring's layer (observe::layer): Layer needs none of the crate's features.
+tracing-subscriber = { version = "0.3", default-features = false, features = ["std"] }
+# A leased credential's bytes, overwritten when it is dropped.
+zeroize = "1.9"
+
+[dev-dependencies]
+# An executor for Quiver's own conformance suite, which the topics simulator passes with no fault
+# armed (tests/seams.rs).
+futures = { version = "0.3", default-features = false, features = ["std", "executor"] }
+# T-RQ0.4.1's counting allocator: the peak heap a put and a get of a large object reach.
+hyper-measure = "0.1"
+# Event lines read back as JSON (observe::line's tests, tests/observe.rs).
+serde_json = "1"
+# The directory a large object's bytes are kept in by tests/big_object.rs, under the target's own
+# temporary folder.
+tempfile = "3"
+# A Registry to put the event ring's layer in, in tests.
+tracing-subscriber = { version = "0.3", default-features = false, features = ["registry", "std"] }
+
+[lints]
+workspace = true

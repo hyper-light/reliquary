@@ -1,5 +1,6 @@
 # Reliquary's gate (CLAUDE.md, "Gates") in kiln CI: every push to main and every pull request runs
-# scripts/gates.sh in a pod, the macOS and Windows lints included.
+# scripts/gates.sh in a pod, the lints of all five targets included. The gates a platform decides run on
+# the others in .kiln/platforms.yaml, and the suite in each Linux distribution in .kiln/distros.yaml.
 name: ci
 on:
   push: { branches: [main] }
@@ -8,11 +9,14 @@ on:
 concurrency: { group: "ci-${{ branch }}", cancel-in-progress: true }
 jobs:
   gates:
-    name: gates (Linux x86_64; macOS and Windows lints)
+    name: the whole gate (Linux x86_64; the lints of all five targets)
     runs-on: [k8s]
     toolchain: rust
     resources: { cpu: "4", memory: 8Gi }
-    timeout-minutes: 30
+    # Five targets' lints, the production check on each, recursion's IR build, deny and the suite: on
+    # 2026-11-20 the production check alone took 4m19s and recursion 3m33s from cold on an arm64 Mac, past
+    # what the gate's 30 minutes held before RQ0.3; kiln's own Rust job is held to 90.
+    timeout-minutes: 90
     env:
       CARGO_INCREMENTAL: "0"
       CARGO_PROFILE_DEV_DEBUG: line-tables-only
@@ -22,7 +26,9 @@ jobs:
     steps:
       - name: python3 and git (the vendor check)
         run: command -v python3 >/dev/null && command -v git >/dev/null || { apt-get update && apt-get install -y --no-install-recommends python3 git; }
-      - name: toolchain (rust-toolchain.toml, pinned exactly, with the macOS and Windows targets)
+      - name: toolchain (rust-toolchain.toml, pinned exactly, with the five targets)
         run: rustup show active-toolchain || rustup toolchain install
-      - name: gates
-        run: bash scripts/gates.sh
+      # aws-lc-sys's C, compiled for each target the gate lints other than the pod's, takes zig (scripts/zig-cc):
+      # installed by its digest (scripts/install-zig) and put on PATH for the gate.
+      - name: gates (zig 0.16.0, pinned by digest, on PATH)
+        run: PATH="$(sh scripts/install-zig):$PATH" bash scripts/gates.sh

@@ -2,6 +2,8 @@
 # The no-panic rule (CLAUDE.md §1) on production code alone: libraries and binaries (cargo's default
 # targets) built without cfg(test), so the test-only allowances at each crate root don't apply. The
 # lints are forbidden, not just denied: an #[allow] or #[expect] for one in production code fails.
+# Arguments go to clippy (scripts/gates.sh gives each of the five targets, so each platform's cfg'd
+# code is held too). Then `unsafe` only in the files CLAUDE.md §12 names (scripts/check-unsafe.py).
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 lints=(
@@ -25,3 +27,4 @@ lints=(
   -F clippy::exit
 )
 cargo clippy --workspace --locked "$@" -- "${lints[@]}"
+python3 scripts/check-unsafe.py

@@ -1,0 +1,44 @@
+Subject: The store's held verdicts on kiln's hyper-durable
+Why: Amphora's store calls hyper-durable's Replica::suspect_held and trust_held (src/database/replicated.rs, heard), which Amphora's own change to hyper-raft adds (its vendor/patches/hyper-raft/0005) and hyper-raft at e0613f52, the revision kiln and Reliquary vendor, lacks. That revision's Replica::suspect and trust take the same held part first, then tell the core, which refuses a replica that elects on ticks with Error::Settings("elections run on ticks") before it changes anything (not fatal, so the replica isn't fenced); Amphora's replicated store always elects on ticks (Elections::Ticks). So suspect and trust, that refusal taken as the held part done, are suspect_held and trust_held: the store builds on Reliquary's one hyper-raft, and its two tests of the held count pass on it
+
+diff --git a/crates/amphora/src/database/replicated.rs b/crates/amphora/src/database/replicated.rs
+index efcc4e6fbd777396c137c31f5b0ca21ba1d5114d..094c095b2380ce6ea872681a3780916aace42d59 100644
+--- a/crates/amphora/src/database/replicated.rs
++++ b/crates/amphora/src/database/replicated.rs
+@@ -518,6 +518,18 @@ fn floor_refused(control: &Control, reason: FloorRefusal, refusal: &Refusal) {
+         "the application floor refused a request"
+     );
+ }
++/// The held part's outcome: the core's refusal of the election part on ticks (`elections run on
++/// ticks`, made before any change) is the held part taken; anything else is the call's own.
++fn held_alone(
++    outcome: Result<(), hyper_durable::ReplicaError>,
++) -> Result<(), hyper_durable::ReplicaError> {
++    match outcome {
++        Err(hyper_durable::ReplicaError::Refused(hyper_raft::Error::Settings(
++            "elections run on ticks",
++        ))) => Ok(()),
++        other => other,
++    }
++}
+ fn raft_error(error: hyper_durable::ReplicaError) -> Refusal {
+     match error {
+         hyper_durable::ReplicaError::Fenced(cause) => fenced(cause),
+@@ -2134,10 +2146,13 @@ impl<F: BlockFile + 'static> Actor<F> {
+                 "the member is this node or not a current member",
+             ));
+         }
+-        match verdict {
+-            Verdict::Suspected(_) => self.replica.suspect_held(member),
+-            Verdict::Trusted(_) => self.replica.trust_held(member),
+-        }
++        // hyper-durable's suspect and trust take the held part, then tell the core, which a replica that
++        // elects on ticks refuses before it changes anything: the held part alone, as hyper-raft's
++        // revision kiln vendors has no Replica::suspect_held or trust_held (Reliquary's change).
++        held_alone(match verdict {
++            Verdict::Suspected(_) => self.replica.suspect(member),
++            Verdict::Trusted(_) => self.replica.trust(member),
++        })
+         .map_err(raft_error)
+     }
+     fn release(&mut self, output: Output<crate::replication::Applied>) -> Result<(), Refusal> {

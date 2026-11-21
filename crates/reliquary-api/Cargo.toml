@@ -1,0 +1,26 @@
+[package]
+name = "reliquary-api"
+description = "Reliquary's API: the distribution spec's requests and answers, the reference model that gives each request its one right answer, and the differential harness that holds an implementation to it"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+# SHA-256 and SHA-512 as kiln links them (vendor/aws-lc-rs/UPSTREAM.md): the model names content by
+# the digest a registry computes.
+aws-lc-rs = "1.18"
+# hyper-sim's SplitMix64 and its named streams: a history is a function of its seed, as every
+# simulation here is (architecture D21).
+hyper-sim = "0.1"
+
+# The oracles the tests hold the model to: the spec's own expressions run by a regex engine, and a
+# JSON reader for the manifests the generator writes.
+[dev-dependencies]
+regex = "1"
+serde_json = "1"
+
+[lints]
+workspace = true

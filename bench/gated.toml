@@ -1,0 +1,8 @@
+# The benches CI gates by instructions an operation (plan RQ0.7, AC-RQ0.7.6; bench/README.md): each
+# is counted in the change's base (A) and in the change (B), interleaved, and a B whose interval lies
+# wholly above A's fails the gate unless the change accepts it (`Bench-accepted: <bench>: <why>`).
+# A bench named here takes no setting a person picks: its work is Reliquary's own code.
+
+[[bench]]
+name = "judge"
+why = "the judgment every point's report and every A|B verdict passes through (crates/reliquary-bench/src/rounds.rs)"

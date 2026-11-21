@@ -1,0 +1,60 @@
+# The gate on instruction counts (plan RQ0.7, AC-RQ0.7.6; bench/README.md): on every push to main and
+# every pull request, the benches bench/gated.toml names are counted in the change (B) and its base (A),
+# interleaved, by cachegrind, which counts every instruction a process runs with no hardware counter,
+# so a pod needs no privilege for it (research/07 F17, F19, F24). A bench whose B rises, its interval
+# separated above A's (or, where an arm cannot be judged, every unit of B above every unit of A), fails
+# the leg unless a commit of the change carries `Bench-accepted: <bench>: <why>`; a bench the base does
+# not run passes as new. The base's own `reliquary bench gate` judges, so a change to the judging cannot pass its own gate;
+# a base with no gate yet leaves it to the change's. The record is kept as the leg's artifact.
+name: instructions
+on:
+  push: { branches: [main] }
+  pull_request: {}
+  manual: true
+concurrency: { group: "instructions-${{ branch }}", cancel-in-progress: true }
+jobs:
+  gate:
+    name: instruction counts (bench/gated.toml, the change against its base)
+    runs-on: [k8s]
+    toolchain: rust
+    resources: { cpu: "4", memory: 8Gi }
+    timeout-minutes: 90
+    env:
+      CARGO_INCREMENTAL: "0"
+      # A pod sees all of its host's CPUs, whatever it requests: builds are held to its request.
+      CARGO_BUILD_JOBS: "4"
+    artifacts: ["records"]
+    steps:
+      - name: valgrind, git and python3
+        run: command -v valgrind >/dev/null && command -v git >/dev/null && command -v python3 >/dev/null || { apt-get update && apt-get install -y --no-install-recommends valgrind git python3; }
+      - name: toolchain (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      # A pull request is measured against where it leaves its base branch; a push against the commit
+      # the branch held before it, so a push of several commits is gated whole (its parent when the
+      # event names none). The two builds go to paths of one length: cachegrind's counts move with a
+      # file name's length (research/07 F18).
+      - name: build the base (A) and the change (B)
+        run: |
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            git fetch --no-tags origin "$GITHUB_BASE_REF"
+            base=$(git merge-base HEAD FETCH_HEAD)
+          else
+            before=$(python3 -I -c 'import json,os; print(json.load(open(os.environ["GITHUB_EVENT_PATH"])).get("before",""))' 2>/dev/null || true)
+            if [ -n "$before" ] && git cat-file -e "$before^{commit}" 2>/dev/null; then base=$before; else base=$(git rev-parse HEAD~1); fi
+          fi
+          echo "$base" > base.txt
+          export BENCH_WORK="$RUNNER_TEMP/bench-build"
+          bash scripts/bench-build.sh "$base" builds/a
+          bash scripts/bench-build.sh HEAD builds/b
+      - name: the gate
+        run: |
+          base=$(cat base.txt)
+          accept=()
+          while IFS= read -r name; do
+            [ -n "$name" ] && accept+=(--accept "$name")
+          done < <(git log --format=%B "$base"..HEAD | sed -n 's/^Bench-accepted: *\([^:]*\):.*/\1/p')
+          mkdir -p records "$RUNNER_TEMP/cachegrind"
+          judge=builds/a/reliquary
+          builds/a/reliquary bench list >/dev/null 2>&1 || judge=builds/b/reliquary
+          "$judge" bench gate bench/gated.toml --a builds/a/reliquary --b builds/b/reliquary \
+            --counter cachegrind --scratch "$RUNNER_TEMP/cachegrind" --record records "${accept[@]}"

@@ -1,0 +1,42 @@
+#!/bin/sh
+# Installs cargo-deny 0.22.0 for this host, by its digest, and prints the directory that holds it: the
+# gate's check of the dependency graph against deny.toml (scripts/gates.sh; plan RQ0.3, T-RQ0.3.4).
+# Digests from the release's own .sha256 files
+# (https://github.com/EmbarkStudios/cargo-deny/releases/tag/0.22.0). CI's job keeps it in its runner's
+# temporary directory; elsewhere it is the user's cache. macOS on arm64 alone, as Reliquary's targets
+# are; Windows on arm64 runs the x86_64 build under the system's emulation.
+set -eu
+version=0.22.0
+case "$(uname -s)-$(uname -m)" in
+	Linux-x86_64) host=x86_64-unknown-linux-musl; sum=98c56e6a408bfa5c3c60744b6015aaa6aa08f743fdeb88386d06fca035bb1786 ;;
+	Linux-aarch64) host=aarch64-unknown-linux-musl; sum=4818d44cdcac285776336504fca722493ab634d3377b94a462e98aad3f41484a ;;
+	Darwin-arm64) host=aarch64-apple-darwin; sum=aa23e2f32eaf0b92efb36de3fc925f3e1b841fdafcc555ddab43d4d146cec251 ;;
+	MINGW*-x86_64 | MSYS*-x86_64 | MINGW*-aarch64 | MSYS*-aarch64 | MINGW*-arm64 | MSYS*-arm64)
+		host=x86_64-pc-windows-msvc; sum=a85b270b4aa28633d2cb2be97fccd4518ccb783014914e99463e75468cb3183c ;;
+	*) echo "install-cargo-deny: no pinned cargo-deny for $(uname -s)-$(uname -m)" >&2; exit 1 ;;
+esac
+home="${RUNNER_TEMP:-${XDG_CACHE_HOME:-$HOME/.cache}/reliquary/cargo-deny}"
+dir="$home/cargo-deny-$version-$host"
+exe=cargo-deny
+case $host in *-windows-*) exe=cargo-deny.exe ;; esac
+if [ ! -x "$dir/$exe" ]; then
+	# Each install downloads and unpacks in a directory of its own, and its finished directory takes
+	# its place by one rename, so installs at once (the suite's tests, where the gate installed none
+	# first) never read each other's half-written files; one that finds another's in place first keeps
+	# that one.
+	mkdir -p "$home"
+	work=$(mktemp -d "$home/.install.XXXXXX")
+	archive="$work/cargo-deny.tar.gz"
+	curl -fsSL --retry 5 --retry-all-errors --retry-delay 10 -o "$archive" \
+		"https://github.com/EmbarkStudios/cargo-deny/releases/download/$version/cargo-deny-$version-$host.tar.gz"
+	# The check's own words go to stderr: stdout is the directory alone.
+	if command -v sha256sum >/dev/null 2>&1; then
+		echo "$sum  $archive" | sha256sum -c - >&2
+	else
+		echo "$sum  $archive" | shasum -a 256 -c - >&2
+	fi
+	tar -xzf "$archive" -C "$work"
+	[ -x "$dir/$exe" ] || mv "$work/cargo-deny-$version-$host" "$dir"
+	rm -rf -- "${work:?}"
+fi
+echo "$dir"

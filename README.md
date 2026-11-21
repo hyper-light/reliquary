@@ -10,7 +10,10 @@ names: agents, harnesses, skills and MCP servers. Its records are in Amphora and
 
 ```sh
 cargo build --release      # target/release/reliquary
-bash scripts/gates.sh      # every gate, as kiln CI runs them
+PATH="$(sh scripts/install-zig):$PATH" bash scripts/gates.sh   # every gate, as kiln CI runs them
 ```
+
+The gate's macOS and Windows lints compile aws-lc-sys's C for those targets with zig 0.16.0
+(`scripts/zig-cc`); `scripts/install-zig` installs it by its digest and prints where.
 
 MIT licensed (`LICENSE`).

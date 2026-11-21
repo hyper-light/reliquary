@@ -1,0 +1,4 @@
+# Open items: rows of docs/design/constants.md whose kind the rule refuses, one `file key` a line.
+# Mantle's gate forgives the items its list names; Reliquary forgives none. This list stays empty,
+# and scripts/check-contracts.py fails on any item in it (AC-RQ0.2.2): give the number a basis the
+# rule accepts instead.

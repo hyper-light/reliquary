@@ -109,17 +109,32 @@ revision of each (kiln's docs/vendoring.md). No package takes the name of a crat
 ## Gates
 
 Every commit passes these on its final tree. `bash scripts/gates.sh` runs them in order and stops at
-the first failure; kiln CI runs it on every push and pull request (`.kiln/ci.yaml`).
+the first failure; kiln CI runs it on every push and pull request (`.kiln/ci.yaml`). Approved by the
+person on 2026-11-20 (`docs/design/gates.md`).
 
 ```
+python3 scripts/check-contracts.py
 cargo fmt --all --check
-cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo clippy --workspace --all-targets --locked --target x86_64-unknown-linux-gnu -- -D warnings
+cargo clippy --workspace --all-targets --locked --target aarch64-unknown-linux-gnu -- -D warnings
 cargo clippy --workspace --all-targets --locked --target aarch64-apple-darwin -- -D warnings
 cargo clippy --workspace --all-targets --locked --target x86_64-pc-windows-msvc -- -D warnings
-bash scripts/check-production.sh
-cargo test --workspace --locked
+cargo clippy --workspace --all-targets --locked --target aarch64-pc-windows-msvc -- -D warnings
+bash scripts/check-production.sh --target <each of the five>
+python3 scripts/check-recursion.py
+cargo deny --locked check advisories bans licenses sources
+bash scripts/test.sh
 python3 scripts/vendor.py check
 ```
+
+The production check is the no-panic lints on each target, then `unsafe` only in the files §12 names.
+Recursion is read from the built code's call graph, through trait objects and function pointers too.
+cargo-deny is 0.22.0, installed by its digest (`scripts/install-cargo-deny`). `scripts/test.sh` checks
+that every test cites a requirement and skips only through the skip record, runs the suite, and prints
+the record after it, pass or fail. `bash scripts/gates.sh here` runs the production check, recursion
+and the tests, which kiln CI runs on macOS arm64, Windows x86_64 and Linux arm64
+(`.kiln/platforms.yaml`); the suite also runs in Debian, Red Hat, SUSE, Arch and Alpine containers on
+both architectures (`.kiln/distros.yaml`).
 
 ## Working here
 

@@ -1,0 +1,67 @@
+# The gates a platform decides (`scripts/gates.sh here`: the production check of the host's target,
+# recursion in the host's build, and the suite with its skip record) on each of Reliquary's five
+# targets that has a runner, on every push to main and every pull request (plan RQ0.3, AC-RQ0.3.2,
+# T-RQ0.3.8). Linux x86_64 runs them inside the whole gate, .kiln/ci.yaml's `gates`; the gate's other
+# steps read the same sources and give the same answer anywhere. Windows on arm64 has no runner:
+# STATUS.md says what closes it.
+name: platforms
+on:
+  push: { branches: [main] }
+  pull_request: {}
+  manual: true
+concurrency: { group: "platforms-${{ branch }}", cancel-in-progress: true }
+env:
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CARGO_BUILD_JOBS: "4"
+  RUST_TEST_THREADS: "4"
+jobs:
+  macos-arm64:
+    name: the gates here (macOS arm64)
+    # A launchd service's PATH has none of the usual tools in it.
+    runs-on: [baremetal]
+    requires: ["os == macos", "arch == aarch64", "tools has cargo", "tools has python3", "tools has git"]
+    timeout-minutes: 60
+    steps:
+      - name: the gates here
+        run: export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH" && nice -n 10 bash scripts/gates.sh here
+
+  linux-arm64:
+    name: the gates here (Linux arm64, Debian 13)
+    # A linux/arm64 container on an arm64 machine's docker: no Linux arm64 machine is a runner of its own.
+    runs-on: [baremetal]
+    requires: ["arch == aarch64", "executors has docker"]
+    image: docker.io/library/rust:1.99.1-trixie
+    timeout-minutes: 60
+    steps:
+      - name: python3 and git
+        run: apt-get update && apt-get install -y --no-install-recommends python3 git
+      - name: toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - name: the gates here
+        run: bash scripts/gates.sh here
+
+  windows-x86_64:
+    name: the gates here (Windows x86_64)
+    runs-on: [baremetal]
+    requires: ["os == windows", "arch == x86_64", "tools has cargo", "tools has git"]
+    timeout-minutes: 90
+    steps:
+      # The runner has no Python: python.org's embeddable 3.14.10, by the digest python.org publishes
+      # for it, as python3 too; and Git for Windows' bash, beside its git.
+      - name: python3, and the gates here in Git's bash
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'python-3.14.10'
+          if (-not (Test-Path (Join-Path $dir 'python3.exe'))) {
+            $zip = "$dir.zip"
+            Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip' -OutFile $zip
+            if ((Get-FileHash -Algorithm SHA256 $zip).Hash -ne '90905E64A840557D8C1BC4F5B74DB3D7EE85E3FFB217611CAC1C7813ACEA4159') { throw "python-3.14.10-embed-amd64.zip is not the file python.org published" }
+            Expand-Archive -Path $zip -DestinationPath $dir -Force
+            Copy-Item (Join-Path $dir 'python.exe') (Join-Path $dir 'python3.exe')
+          }
+          $env:PATH = "$dir;$env:PATH"
+          $bash = Join-Path (Split-Path (Split-Path (Get-Command git).Source)) 'bin\bash.exe'
+          & $bash scripts/gates.sh here
+          exit $LASTEXITCODE

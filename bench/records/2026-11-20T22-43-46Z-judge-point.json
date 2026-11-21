@@ -1,0 +1,630 @@
+{
+  "format": 1,
+  "tool": "reliquary bench 0.1.0 (unknown commit)",
+  "date": "2026-11-20T22:43:46Z",
+  "host": {
+    "os": "macos",
+    "arch": "aarch64",
+    "cpu": "Apple M5 Max",
+    "cores": 18,
+    "memory_bytes": 137438953472,
+    "kernel": "25.4.0",
+    "machine": null
+  },
+  "rule": "of record only if the one-minute load average less this run's own share stayed under 2 at every reading (CLAUDE.md §7) and every build names a clean commit",
+  "kind": "measured",
+  "request": {
+    "a": {
+      "builds": [
+        "/Users/adalundhe/.cache/reliquary-rq07/target/release/reliquary"
+      ],
+      "bench": "judge",
+      "settings": []
+    },
+    "b": null,
+    "metric": {
+      "kind": "latency",
+      "per": 99,
+      "of": 100
+    },
+    "offered": {
+      "kind": "power"
+    },
+    "tail": [
+      99,
+      100
+    ],
+    "in_flight": 1,
+    "precision": 0.05,
+    "seed": 11,
+    "build_cost_ns": null
+  },
+  "size": {
+    "ops": 368,
+    "why": "the most of ⌈368/10⌉ = 37 (the 99/100 quantile's interval needs 368 operations, after the fewest rounds), ⌈1 × 0.5/0.05⌉ = 10 (operations in flight at a round's end cost it at most the precision), 368 (the operations a round's own quantile needs, for a latency metric), and ⌈(1.96 × 0.085/0.05)²⌉ = 12 (Jain's sample size, from the operations' spread in a sizing round of 368, not kept); Mantle's design §5a",
+    "load": {
+      "kind": "open",
+      "per_second": 114117.37343980152,
+      "seed": 4839782808629744545
+    },
+    "load_why": "open loop, Poisson at 114117.4 a second: 0.5 of 228234.7, the slower arm's closed-loop rate in a round of 368 after one discarded, M/M/1's point of greatest power (Kleinrock, ICC '79)"
+  },
+  "levels": [
+    {
+      "level": "rounds",
+      "count": {
+        "kind": "until_settled",
+        "min": 10,
+        "max": 28
+      },
+      "own_variance": 302208510700736.5,
+      "cost_ns": 16126078.0,
+      "why": "the top level with variation of its own (3.022e14): repeated until its values are independent and every state's median interval is within the precision, from 10 (the fewest at which order in time is tested) to 28 (the fewest at which a second state holds its own interval); the interval is stated from its values only (KJ13 Eq. 4)"
+    },
+    {
+      "level": "process_starts",
+      "count": {
+        "kind": "fixed",
+        "times": 1
+      },
+      "own_variance": -5875290268652.828,
+      "cost_ns": 63371000.0,
+      "why": "not repeated: its own variance, -5.875e12, is not above zero, so it adds no variation to the levels below (KJ13 §9.2)"
+    },
+    {
+      "level": "builds",
+      "count": {
+        "kind": "fixed",
+        "times": 1
+      },
+      "own_variance": null,
+      "cost_ns": null,
+      "why": "one build an arm was given: its variation, code layout's, is not measured, so the interval covers process starts and rounds only (KJ13 §3; STABILIZER, research/07 F32)"
+    }
+  ],
+  "arms": [
+    {
+      "arm": "A",
+      "spec": {
+        "builds": [
+          "/Users/adalundhe/.cache/reliquary-rq07/target/release/reliquary"
+        ],
+        "bench": "judge",
+        "settings": []
+      },
+      "commits": [
+        "unknown commit"
+      ],
+      "judgment": {
+        "rounds": 28,
+        "order": "independent",
+        "lag1": -0.3468677842764657,
+        "runs": 14,
+        "dip": [
+          0.10087611188842185,
+          0.09089968462905208
+        ],
+        "states": [
+          {
+            "rounds": [
+              1,
+              3,
+              5,
+              7,
+              11,
+              16,
+              18,
+              23,
+              27
+            ],
+            "median": 54186576.0,
+            "interval": [
+              50686374.0,
+              58108638.0
+            ],
+            "min": 43995936.0,
+            "max": 62111835.0
+          },
+          {
+            "rounds": [
+              0,
+              2,
+              4,
+              6,
+              8,
+              9,
+              10,
+              12,
+              13,
+              14,
+              15,
+              17,
+              19,
+              20,
+              21,
+              22,
+              24,
+              25,
+              26
+            ],
+            "median": 12180171.0,
+            "interval": [
+              10891217.0,
+              16313311.0
+            ],
+            "min": 10055601.0,
+            "max": 18372204.0
+          }
+        ]
+      },
+      "states": [
+        {
+          "median": 54186576.0,
+          "interval": [
+            50686374.0,
+            58108638.0
+          ],
+          "spread": 0.07238069443620132,
+          "units": 9,
+          "share": 0.32142857142857145,
+          "share_interval": [
+            0.1587760378861543,
+            0.5235164067096185
+          ],
+          "independent": true,
+          "operations": 3312,
+          "tails": [
+            [
+              "p50",
+              {
+                "estimate": 54525951,
+                "lower": 50331648,
+                "upper": 54525951
+              }
+            ],
+            [
+              "p99",
+              {
+                "estimate": 58720255,
+                "lower": 54525952,
+                "upper": 58720255
+              }
+            ],
+            [
+              "p99.9",
+              null
+            ]
+          ]
+        },
+        {
+          "median": 12180171.0,
+          "interval": [
+            10891217.0,
+            16313311.0
+          ],
+          "spread": 0.33933349540002355,
+          "units": 19,
+          "share": 0.6785714285714286,
+          "share_interval": [
+            0.4764835932903816,
+            0.8412239621138462
+          ],
+          "independent": true,
+          "operations": 6992,
+          "tails": [
+            [
+              "p50",
+              {
+                "estimate": 12582911,
+                "lower": 11534336,
+                "upper": 12582911
+              }
+            ],
+            [
+              "p99",
+              {
+                "estimate": 18874367,
+                "lower": 16777216,
+                "upper": 18874367
+              }
+            ],
+            [
+              "p99.9",
+              {
+                "estimate": 18874367,
+                "lower": 16777216,
+                "upper": 18874367
+              }
+            ]
+          ]
+        }
+      ],
+      "units": [
+        {
+          "index": 0,
+          "build": 0,
+          "value": 14375208.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 14379874
+        },
+        {
+          "index": 1,
+          "build": 0,
+          "value": 52025325.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 52022093
+        },
+        {
+          "index": 2,
+          "build": 0,
+          "value": 16313311.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 16314514
+        },
+        {
+          "index": 3,
+          "build": 0,
+          "value": 62111835.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 62118355
+        },
+        {
+          "index": 4,
+          "build": 0,
+          "value": 15449418.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 15450873
+        },
+        {
+          "index": 5,
+          "build": 0,
+          "value": 56058491.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 56063195
+        },
+        {
+          "index": 6,
+          "build": 0,
+          "value": 17257745.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 17262711
+        },
+        {
+          "index": 7,
+          "build": 0,
+          "value": 50686374.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 50683918
+        },
+        {
+          "index": 8,
+          "build": 0,
+          "value": 11416822.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 11418578
+        },
+        {
+          "index": 9,
+          "build": 0,
+          "value": 10891217.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 10945012
+        },
+        {
+          "index": 10,
+          "build": 0,
+          "value": 11085862.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 11085803
+        },
+        {
+          "index": 11,
+          "build": 0,
+          "value": 43995936.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 43995778
+        },
+        {
+          "index": 12,
+          "build": 0,
+          "value": 10070050.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 10072722
+        },
+        {
+          "index": 13,
+          "build": 0,
+          "value": 10055601.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 10066952
+        },
+        {
+          "index": 14,
+          "build": 0,
+          "value": 10118969.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 10148018
+        },
+        {
+          "index": 15,
+          "build": 0,
+          "value": 10091322.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 10098688
+        },
+        {
+          "index": 16,
+          "build": 0,
+          "value": 55357578.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 55367555
+        },
+        {
+          "index": 17,
+          "build": 0,
+          "value": 14751175.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 14748446
+        },
+        {
+          "index": 18,
+          "build": 0,
+          "value": 54186576.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 54186810
+        },
+        {
+          "index": 19,
+          "build": 0,
+          "value": 18243864.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 18271440
+        },
+        {
+          "index": 20,
+          "build": 0,
+          "value": 18372204.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 18370895
+        },
+        {
+          "index": 21,
+          "build": 0,
+          "value": 16262817.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 16283328
+        },
+        {
+          "index": 22,
+          "build": 0,
+          "value": 16661588.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 16661428
+        },
+        {
+          "index": 23,
+          "build": 0,
+          "value": 51818888.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 51818046
+        },
+        {
+          "index": 24,
+          "build": 0,
+          "value": 11016926.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 11022572
+        },
+        {
+          "index": 25,
+          "build": 0,
+          "value": 12180171.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 12179100
+        },
+        {
+          "index": 26,
+          "build": 0,
+          "value": 12124062.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 12123244
+        },
+        {
+          "index": 27,
+          "build": 0,
+          "value": 58108638.0,
+          "ops": 368,
+          "rounds": 1,
+          "late_max_ns": 58111645
+        }
+      ]
+    }
+  ],
+  "comparison": null,
+  "readings": [
+    {
+      "when": "before the first unit",
+      "one_minute": 10.19775390625,
+      "own": 0.0
+    },
+    {
+      "when": "after cycle 1",
+      "one_minute": 9.94140625,
+      "own": 0.0037457659306656126
+    },
+    {
+      "when": "after cycle 2",
+      "one_minute": 9.94140625,
+      "own": 0.0037744348238096023
+    },
+    {
+      "when": "after cycle 3",
+      "one_minute": 9.94140625,
+      "own": 0.0037945382109492304
+    },
+    {
+      "when": "after cycle 4",
+      "one_minute": 9.94140625,
+      "own": 0.00382264756307551
+    },
+    {
+      "when": "after cycle 5",
+      "one_minute": 9.94140625,
+      "own": 0.0038431125283734688
+    },
+    {
+      "when": "after cycle 6",
+      "one_minute": 9.94140625,
+      "own": 0.003861003000968431
+    },
+    {
+      "when": "after cycle 7",
+      "one_minute": 9.94140625,
+      "own": 0.003882288395953893
+    },
+    {
+      "when": "after cycle 8",
+      "one_minute": 9.94140625,
+      "own": 0.003900602194447486
+    },
+    {
+      "when": "after cycle 9",
+      "one_minute": 9.94140625,
+      "own": 0.003921786400792295
+    },
+    {
+      "when": "after cycle 10",
+      "one_minute": 9.94140625,
+      "own": 0.0039433694312546435
+    },
+    {
+      "when": "after cycle 11",
+      "one_minute": 9.94140625,
+      "own": 0.003965374590945388
+    },
+    {
+      "when": "after cycle 12",
+      "one_minute": 9.94140625,
+      "own": 0.003983136990652402
+    },
+    {
+      "when": "after cycle 13",
+      "one_minute": 9.94140625,
+      "own": 0.00400862478776662
+    },
+    {
+      "when": "after cycle 14",
+      "one_minute": 9.94140625,
+      "own": 0.004030464483897086
+    },
+    {
+      "when": "after cycle 15",
+      "one_minute": 9.94140625,
+      "own": 0.004050950151775297
+    },
+    {
+      "when": "after cycle 16",
+      "one_minute": 9.94140625,
+      "own": 0.004071463738374877
+    },
+    {
+      "when": "after cycle 17",
+      "one_minute": 10.02587890625,
+      "own": 0.004088512752566446
+    },
+    {
+      "when": "after cycle 18",
+      "one_minute": 10.02587890625,
+      "own": 0.004108148627642101
+    },
+    {
+      "when": "after cycle 19",
+      "one_minute": 10.02587890625,
+      "own": 0.004124117670866631
+    },
+    {
+      "when": "after cycle 20",
+      "one_minute": 10.02587890625,
+      "own": 0.004142514148741295
+    },
+    {
+      "when": "after cycle 21",
+      "one_minute": 10.02587890625,
+      "own": 0.004164893743643515
+    },
+    {
+      "when": "after cycle 22",
+      "one_minute": 10.02587890625,
+      "own": 0.004187760350376107
+    },
+    {
+      "when": "after cycle 23",
+      "one_minute": 10.02587890625,
+      "own": 0.0042131760690473485
+    },
+    {
+      "when": "after cycle 24",
+      "one_minute": 10.02587890625,
+      "own": 0.00423878459555381
+    },
+    {
+      "when": "after cycle 25",
+      "one_minute": 10.02587890625,
+      "own": 0.004266061812389041
+    },
+    {
+      "when": "after cycle 26",
+      "one_minute": 10.02587890625,
+      "own": 0.004293573483659386
+    },
+    {
+      "when": "after cycle 27",
+      "one_minute": 10.02587890625,
+      "own": 0.00431978916848453
+    },
+    {
+      "when": "after cycle 28",
+      "one_minute": 10.02587890625,
+      "own": 0.004342102557001745
+    },
+    {
+      "when": "at the end",
+      "one_minute": 10.02587890625,
+      "own": 0.004336452867670746
+    }
+  ],
+  "standing": {
+    "standing": "not of record",
+    "why": [
+      "the one-minute load average was 10.20 before the first unit, 10.20 of it not this run's, at or over the rule's 2 (CLAUDE.md §7); 30 of 30 readings were over it, the most 10.20 before the first unit, 10.20 not this run's",
+      "build 1 names no clean commit (unknown commit); a record of record is of a build made from one (scripts/bench-build.sh)"
+    ]
+  }
+}

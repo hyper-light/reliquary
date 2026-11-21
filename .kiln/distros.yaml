@@ -1,0 +1,59 @@
+# The suite in a container of each major Linux distribution family, on both architectures (plan RQ0.3,
+# AC-RQ0.3.7, T-RQ0.3.9): Debian, Red Hat (its Universal Base Image), SUSE (openSUSE Leap), Arch, and
+# Alpine with musl. Each installs what building needs, the pinned rustup and toolchain
+# (scripts/install-rust), and runs scripts/test.sh, whose skip record names each test a family could
+# not run and what it lacked. A family that fails is its leg failing, by name. x86_64 runs in kiln's
+# pods; arm64 in a linux/arm64 container on an arm64 machine's docker. Arch Linux publishes no arm64
+# image (its official image is x86_64 alone): STATUS.md names that leg and what would close it.
+name: distros
+on:
+  push: { branches: [main] }
+  pull_request: {}
+  manual: true
+concurrency: { group: "distros-${{ branch }}", cancel-in-progress: true }
+env:
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CARGO_BUILD_JOBS: "4"
+  RUST_TEST_THREADS: "4"
+jobs:
+  x86_64:
+    name: the suite in ${{ matrix.family }} (x86_64)
+    runs-on: [k8s]
+    image: ${{ matrix.image }}
+    resources: { cpu: "4", memory: 8Gi }
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { family: debian, image: "docker.io/library/debian:trixie", setup: "apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gcc libc6-dev make git python3" }
+          - { family: redhat, image: "registry.access.redhat.com/ubi10/ubi", setup: "dnf install -y --setopt=install_weak_deps=False gcc make git python3 && (command -v curl >/dev/null || dnf install -y curl)" }
+          - { family: suse, image: "docker.io/opensuse/leap:16.0", setup: "zypper --non-interactive install --no-recommends curl gcc make git python3 gzip tar" }
+          - { family: arch, image: "docker.io/library/archlinux:latest", setup: "pacman -Syu --noconfirm --needed curl gcc make git python" }
+          - { family: alpine, image: "docker.io/library/alpine:3.24", setup: "apk add --no-cache bash curl gcc musl-dev make git python3" }
+    steps:
+      - name: what building needs (${{ matrix.family }})
+        run: ${{ matrix.setup }}
+      - name: the suite
+        run: export PATH="$(sh scripts/install-rust):$PATH" && bash scripts/test.sh
+
+  aarch64:
+    name: the suite in ${{ matrix.family }} (aarch64)
+    runs-on: [baremetal]
+    requires: ["arch == aarch64", "executors has docker"]
+    image: ${{ matrix.image }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { family: debian, image: "docker.io/library/debian:trixie", setup: "apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gcc libc6-dev make git python3" }
+          - { family: redhat, image: "registry.access.redhat.com/ubi10/ubi", setup: "dnf install -y --setopt=install_weak_deps=False gcc make git python3 && (command -v curl >/dev/null || dnf install -y curl)" }
+          - { family: suse, image: "docker.io/opensuse/leap:16.0", setup: "zypper --non-interactive install --no-recommends curl gcc make git python3 gzip tar" }
+          - { family: alpine, image: "docker.io/library/alpine:3.24", setup: "apk add --no-cache bash curl gcc musl-dev make git python3" }
+    steps:
+      - name: what building needs (${{ matrix.family }})
+        run: ${{ matrix.setup }}
+      - name: the suite
+        run: export PATH="$(sh scripts/install-rust):$PATH" && bash scripts/test.sh

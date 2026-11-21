@@ -52,3 +52,34 @@ debug = "line-tables-only"
 
 [profile.bench]
 inherits = "release"
+
+# Each hyper-light product and aws-lc-rs at the one copy Reliquary vendors (vendor/MANIFEST.toml), at the
+# revision kiln vendors it: Reliquary's crates name them by name and version, and kiln, vendoring Reliquary,
+# patches the same names to its own copies (kiln's docs/vendoring.md). The vendored crates take one another
+# by path, which Mantle's recorded change points at vendor/hyper-raft (vendor/mantle/UPSTREAM.md).
+[patch.crates-io]
+# Amphora's embedded store and amphora-api, the trait Reliquary keeps its records through
+# (vendor/amphora/UPSTREAM.md).
+amphora = { path = "vendor/amphora/crates/amphora" }
+amphora-api = { path = "vendor/amphora/crates/api" }
+# aws-lc-rs at kiln's release with Mantle's changes (vendor/aws-lc-rs/UPSTREAM.md); aws-lc-sys stays
+# crates.io's, built as kiln builds it (.cargo/config.toml).
+aws-lc-rs = { path = "vendor/aws-lc-rs/aws-lc-rs" }
+hyper-block = { path = "vendor/hyper-raft/crates/hyper-block" }
+hyper-durable = { path = "vendor/hyper-raft/crates/hyper-durable" }
+hyper-log = { path = "vendor/hyper-raft/crates/hyper-log" }
+hyper-measure = { path = "vendor/hyper-raft/crates/hyper-measure" }
+hyper-quic = { path = "vendor/hyper-raft/crates/hyper-quic" }
+hyper-raft = { path = "vendor/hyper-raft/crates/hyper-raft" }
+hyper-rt = { path = "vendor/hyper-raft/crates/hyper-rt" }
+hyper-rt-transport = { path = "vendor/hyper-raft/crates/hyper-rt-transport" }
+hyper-sim = { path = "vendor/hyper-raft/crates/hyper-sim" }
+hyper-timing = { path = "vendor/hyper-raft/crates/hyper-timing" }
+hyper-tls = { path = "vendor/hyper-raft/crates/hyper-tls" }
+hyper-transport = { path = "vendor/hyper-raft/crates/hyper-transport" }
+mantle-client = { path = "vendor/mantle/crates/client" }
+mantle-crc = { path = "vendor/mantle/crates/crc" }
+mantle-http = { path = "vendor/mantle/crates/http" }
+mantle-protocol = { path = "vendor/mantle/crates/protocol" }
+# quiver-api, the trait Reliquary reaches its events through (vendor/quiver/UPSTREAM.md).
+quiver-api = { path = "vendor/quiver/crates/quiver-api" }

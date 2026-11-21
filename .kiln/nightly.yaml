@@ -1,0 +1,51 @@
+# The nightly latency run (plan RQ0.7, AC-RQ0.7.6; bench/README.md): main's tip, built naming its
+# commit, measured on the bench host alone, open loop at the power point, its p99 from each operation's
+# intended start; a point of record is fed to kiln's metrics ($KILN_METRICS, kiln's docs/ci.md W16-R07).
+# Then the series kiln keeps of it, a point a night for up to a year on runners of one fingerprint, goes
+# to the change-point detector, which fails the run on a change for the worse that bench/changes.toml
+# does not acknowledge, naming its commit range and the last commit of the history it read.
+#
+# Until RQ1 brings `reliquary_pull` (AC-T9.1.4), the bench measured is `judge`, the tool's own judgment:
+# Reliquary code with no setting a person picks. The schedule is the slot the person books on kiln's
+# bench calendar (CLAUDE.md, "Working here"); until then it runs by hand.
+name: nightly
+on:
+  schedule: ["41 2 * * *"]
+  manual: true
+jobs:
+  latency:
+    name: nightly latency (judge, open loop at the power point, p99)
+    runs-on: [baremetal, bench]
+    exclusive: true
+    toolchain: rust
+    timeout-minutes: 120
+    env:
+      CARGO_INCREMENTAL: "0"
+    artifacts: ["records"]
+    steps:
+      - name: build main's tip, naming its commit
+        run: BENCH_WORK="$RUNNER_TEMP/bench-build" bash scripts/bench-build.sh HEAD builds/b
+      - name: measure, and feed a point of record to kiln's metrics
+        run: |
+          mkdir -p records
+          builds/b/reliquary bench run judge --metric latency:p99 --load power \
+            --machine "${KILN_AGENT:-bench}" --record records --metrics "$KILN_METRICS"
+
+  changes:
+    name: change points in the nightly series
+    needs: [latency]
+    runs-on: [k8s]
+    toolchain: rust
+    # The metrics API reads the repository's runs (kiln's docs/ci.md, `ci.metrics.repo`: runs.read).
+    permissions: { actions: read }
+    timeout-minutes: 60
+    steps:
+      - name: build the detector
+        run: cargo build --release --locked -p reliquary --bin reliquary
+      - name: read the series kiln keeps, and look for change points
+        run: |
+          repo=$(printf %s "$KILN_REPO" | sed 's#/#%2F#g')
+          curl -fsS -H "Authorization: Bearer $KILN_TOKEN" \
+            "$GITHUB_SERVER_URL/api/ci/repos/$repo/metrics?name=reliquary.bench.judge.latency_99_100&branch=main&days=365" \
+            -o series.json
+          target/release/reliquary bench changes series.json --acknowledged bench/changes.toml
