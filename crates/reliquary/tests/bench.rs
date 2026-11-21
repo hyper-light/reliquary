@@ -150,9 +150,11 @@ fn an_open_loop_point_states_its_rate_and_latency_from_intended_starts() {
     assert!(said.contains("latency from the intended start"), "{said}");
 }
 
-/// The gate on instruction counts → each gated bench named with a verdict and both intervals, and the
-/// status 1 exactly when a bench rose unaccepted (AC-RQ0.7.6). The counter is cachegrind where
-/// Valgrind is installed, else the OS's where it counts a process's instructions (macOS).
+/// The gate on instruction counts → each gated bench named with a verdict and each arm's interval, or
+/// its dash where the arm cannot be judged, and the status 1 exactly when a bench rose unaccepted
+/// (AC-RQ0.7.6). The counter is cachegrind where Valgrind is installed, else the OS's where it counts a
+/// process's instructions (macOS), whose A|A gates leave an arm unjudged often (measurement.md: seven
+/// of ten on a loaded Mac; one of kiln CI's macOS legs, 2026-11-21).
 #[test]
 fn the_gates_status_follows_its_verdicts() {
     let dir = tempfile::tempdir().unwrap();
@@ -198,7 +200,12 @@ fn the_gates_status_follows_its_verdicts() {
         .lines()
         .find(|l| l.starts_with("spin: "))
         .unwrap_or_else(|| panic!("no line for spin: {said}"));
-    assert!(line.contains("A [") && line.contains("B ["), "{line}");
+    for arm in ["A", "B"] {
+        assert!(
+            line.contains(&format!("{arm} [")) || line.contains(&format!("{arm} —")),
+            "{line}"
+        );
+    }
     let failed = said.contains("FAILED:");
     assert_eq!(
         out.status.code(),
