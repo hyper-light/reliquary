@@ -93,8 +93,10 @@ x86_64 and Linux arm64, `.kiln/platforms.yaml`) and the evidence its requirement
   separated between a commit and its parent (runs 01a1fc07f950, 01a1fc188d9a); the nightly built,
   measured open loop at the power point on an arm64 Mac runner, held its record not of record by the
   load rule (a load average of 7.90), fed nothing, and its detector read kiln's series through the
-  metrics API (run 01a1fc1f55aa). No night is fed yet: scheduled nights take the bench host in a slot
-  the person books on kiln's bench calendar. Checked on macOS arm64: lints, the production check, every test of `reliquary` and
+  metrics API (run 01a1fc1f55aa). No night is fed yet, so no alert has been raised live: scheduled
+  nights run from main on the bench host, in a slot the person books on kiln's bench calendar, and are
+  of record only if that slot lets its load average fall under 2 (it read 84 on 2026-11-21); the
+  detector's first alert needs at least six fed nights and a change for the worse. Checked on macOS arm64: lints, the production check, every test of `reliquary` and
   `reliquary-bench` (the end-to-end `tests/bench.rs` among them), and the gate live (ten A|A gates all
   passed; three gates of a build planted with 10% more work all failed). On Windows x86_64 (jupiter),
   at rq0-ground's b95b7e3a on 2026-11-21: the crate's 79 tests and `tests/bench.rs`'s 6, the release

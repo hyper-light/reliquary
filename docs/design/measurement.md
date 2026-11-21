@@ -224,10 +224,15 @@ not hold the commit a bisection finds.
 
 ## Open
 
-- **A fed night.** Both workflows have run in kiln CI (M7, M8), but no night has been fed: kiln's
-  arm64 Mac runners ran at load averages of 4.5 to 7.9 when the nightly ran by hand, so its records
-  were not of record. Scheduled nights take the bench host in a slot the person books on kiln's bench
-  calendar; the detector's first verdict over a fed series waits for those nights.
+- **A fed night, and an alert.** Both workflows have run in kiln CI (M7, M8), but no night has been
+  fed: kiln's arm64 Mac runners ran at load averages of 4.5 to 7.9 when the nightly ran by hand, so its
+  records were not of record. Scheduled nights run from main on the bench host, in a slot the person
+  books on kiln's bench calendar; the bench host's one-minute load average read 84 at 03:00 UTC on
+  2026-11-21, so a night there is of record only if its slot keeps other work off long enough for the
+  average to fall under 2, which the first scheduled night will show. The detector keeps a point a UTC
+  day and needs three on each side of a change, so its first alert over a fed series is six nights
+  away at the least, and comes only if the series changes for the worse; until then an alert's commit
+  range is shown by T-RQ0.7.10 and `cli.rs`'s test over kiln's answer.
 - **Builds as a level.** The tool measures builds given to it; making builds that differ in code layout
   (a linker's section order, STABILIZER's re-randomization) is not built.
 - **A container's own pressure.** In a container the load rule reads the host's average; the
