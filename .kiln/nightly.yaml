@@ -43,8 +43,10 @@ jobs:
     runs-on: [baremetal]
     requires: ["arch == aarch64", "executors has docker"]
     container: docker.io/library/rust:1.99.1-trixie
-    # The metrics API reads the repository's runs (kiln's docs/ci.md, `ci.metrics.repo`: runs.read).
-    permissions: { actions: read }
+    # The metrics API reads the repository's runs (kiln's docs/ci.md, `ci.metrics.repo`: runs.read), and
+    # the checkout reads its contents: naming one scope sets every other to none, as on GitHub, and with
+    # `contents: none` the checkout failed (kiln run 01a1fc18375d, 2026-11-21).
+    permissions: { actions: read, contents: read }
     timeout-minutes: 60
     steps:
       - name: build the detector
