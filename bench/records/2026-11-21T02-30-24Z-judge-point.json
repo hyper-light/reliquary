@@ -1,0 +1,392 @@
+{
+  "format": 1,
+  "tool": "reliquary bench 0.1.0 (b0f11d6c9335dcf15cea9e56fc9278212243454e)",
+  "date": "2026-11-21T02:30:24Z",
+  "host": {
+    "os": "macos",
+    "arch": "aarch64",
+    "cpu": "Apple M4 Max",
+    "cores": 14,
+    "memory_bytes": 38654705664,
+    "kernel": "25.2.0",
+    "machine": "adas-mac-studio"
+  },
+  "rule": "of record only if the one-minute load average less this run's own share stayed under 2 at every reading (CLAUDE.md §7) and every build names a clean commit",
+  "kind": "measured",
+  "request": {
+    "a": {
+      "builds": [
+        "/Users/adalundhe/.cache/reliquary-rq07/rec-build/reliquary"
+      ],
+      "bench": "judge",
+      "settings": []
+    },
+    "b": null,
+    "metric": {
+      "kind": "latency",
+      "per": 99,
+      "of": 100
+    },
+    "offered": {
+      "kind": "power"
+    },
+    "tail": [
+      99,
+      100
+    ],
+    "in_flight": 1,
+    "precision": 0.05,
+    "seed": 2026,
+    "build_cost_ns": null
+  },
+  "size": {
+    "ops": 8138,
+    "why": "the most of ⌈368/10⌉ = 37 (the 99/100 quantile's interval needs 368 operations, after the fewest rounds), ⌈1 × 0.5/0.05⌉ = 10 (operations in flight at a round's end cost it at most the precision), 368 (the operations a round's own quantile needs, for a latency metric), and ⌈(1.96 × 2.301/0.05)²⌉ = 8138 (Jain's sample size, from the operations' spread in a sizing round of 368, not kept); Mantle's design §5a",
+    "load": {
+      "kind": "open",
+      "per_second": 159600.99750623442,
+      "seed": 8699989649721214301
+    },
+    "load_why": "open loop, Poisson at 159601.0 a second: 0.5 of 319202.0, the slower arm's closed-loop rate in a round of 368 after one discarded, M/M/1's point of greatest power (Kleinrock, ICC '79)"
+  },
+  "levels": [
+    {
+      "level": "rounds",
+      "count": {
+        "kind": "fixed",
+        "times": 23
+      },
+      "own_variance": 4696874610.112224,
+      "cost_ns": 50953303.5,
+      "why": "⌈√((c₊/c)·(T²/T₊²))⌉ = ⌈√((5.326e7/5.095e7)·(4.697e9/9.950e6))⌉ = 23 a unit of process starts (KJ13 Eq. 3): repeating it is cheaper than repeating the level above for the same precision"
+    },
+    {
+      "level": "process_starts",
+      "count": {
+        "kind": "until_settled",
+        "min": 10,
+        "max": 28
+      },
+      "own_variance": 9949515.407555401,
+      "cost_ns": 53259958.0,
+      "why": "the top level with variation of its own (9.950e6): repeated until its values are independent and every state's median interval is within the precision, from 10 (the fewest at which order in time is tested) to 28 (the fewest at which a second state holds its own interval); the interval is stated from its values only (KJ13 Eq. 4)"
+    },
+    {
+      "level": "builds",
+      "count": {
+        "kind": "fixed",
+        "times": 1
+      },
+      "own_variance": null,
+      "cost_ns": null,
+      "why": "one build an arm was given: its variation, code layout's, is not measured, so the interval covers process starts and rounds only (KJ13 §3; STABILIZER, research/07 F32)"
+    }
+  ],
+  "arms": [
+    {
+      "arm": "A",
+      "spec": {
+        "builds": [
+          "/Users/adalundhe/.cache/reliquary-rq07/rec-build/reliquary"
+        ],
+        "bench": "judge",
+        "settings": []
+      },
+      "commits": [
+        "b0f11d6c9335dcf15cea9e56fc9278212243454e"
+      ],
+      "judgment": {
+        "rounds": 15,
+        "order": "independent",
+        "lag1": -0.19712378224530416,
+        "runs": 9,
+        "dip": [
+          0.05653594771241831,
+          0.1179
+        ],
+        "states": [
+          {
+            "rounds": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "median": 10090.0,
+            "interval": [
+              9703.0,
+              10223.0
+            ],
+            "min": 7112.0,
+            "max": 10511.0
+          }
+        ]
+      },
+      "states": [
+        {
+          "median": 10090.0,
+          "interval": [
+            9703.0,
+            10223.0
+          ],
+          "spread": 0.03835480673934589,
+          "units": 15,
+          "share": null,
+          "share_interval": null,
+          "independent": true,
+          "operations": 2807610,
+          "tails": [
+            [
+              "p50",
+              {
+                "estimate": 2303,
+                "lower": 2048,
+                "upper": 2303
+              }
+            ],
+            [
+              "p99",
+              {
+                "estimate": 11263,
+                "lower": 10240,
+                "upper": 11263
+              }
+            ],
+            [
+              "p99.9",
+              {
+                "estimate": 6291455,
+                "lower": 5242880,
+                "upper": 6291455
+              }
+            ]
+          ]
+        }
+      ],
+      "units": [
+        {
+          "index": 0,
+          "build": 0,
+          "value": 10511.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 84521
+        },
+        {
+          "index": 1,
+          "build": 0,
+          "value": 7112.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 35200
+        },
+        {
+          "index": 2,
+          "build": 0,
+          "value": 10179.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 75875
+        },
+        {
+          "index": 3,
+          "build": 0,
+          "value": 10090.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 10045263
+        },
+        {
+          "index": 4,
+          "build": 0,
+          "value": 10229.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 58934
+        },
+        {
+          "index": 5,
+          "build": 0,
+          "value": 10009.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 91320
+        },
+        {
+          "index": 6,
+          "build": 0,
+          "value": 8462.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 60638
+        },
+        {
+          "index": 7,
+          "build": 0,
+          "value": 8864.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 51985
+        },
+        {
+          "index": 8,
+          "build": 0,
+          "value": 10223.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 73010
+        },
+        {
+          "index": 9,
+          "build": 0,
+          "value": 9734.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 95995
+        },
+        {
+          "index": 10,
+          "build": 0,
+          "value": 9861.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 94104
+        },
+        {
+          "index": 11,
+          "build": 0,
+          "value": 10125.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 96815
+        },
+        {
+          "index": 12,
+          "build": 0,
+          "value": 9703.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 61417
+        },
+        {
+          "index": 13,
+          "build": 0,
+          "value": 10251.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 46047
+        },
+        {
+          "index": 14,
+          "build": 0,
+          "value": 10138.0,
+          "ops": 187174,
+          "rounds": 23,
+          "late_max_ns": 75586
+        }
+      ]
+    }
+  ],
+  "comparison": null,
+  "readings": [
+    {
+      "when": "before the first unit",
+      "one_minute": 1.92529296875,
+      "own": 0.0
+    },
+    {
+      "when": "after cycle 1",
+      "one_minute": 1.85107421875,
+      "own": 0.10777629611198952
+    },
+    {
+      "when": "after cycle 2",
+      "one_minute": 1.85107421875,
+      "own": 0.12585863991617358
+    },
+    {
+      "when": "after cycle 3",
+      "one_minute": 1.86279296875,
+      "own": 0.1433918039821678
+    },
+    {
+      "when": "after cycle 4",
+      "one_minute": 1.86279296875,
+      "own": 0.16021719660583802
+    },
+    {
+      "when": "after cycle 5",
+      "one_minute": 1.86279296875,
+      "own": 0.1770658067189406
+    },
+    {
+      "when": "after cycle 6",
+      "one_minute": 1.86279296875,
+      "own": 0.19358905530036272
+    },
+    {
+      "when": "after cycle 7",
+      "one_minute": 1.87353515625,
+      "own": 0.20986955637724433
+    },
+    {
+      "when": "after cycle 8",
+      "one_minute": 1.87353515625,
+      "own": 0.22579616900510083
+    },
+    {
+      "when": "after cycle 9",
+      "one_minute": 1.87353515625,
+      "own": 0.24130247991482193
+    },
+    {
+      "when": "after cycle 10",
+      "one_minute": 1.87353515625,
+      "own": 0.25649831130858114
+    },
+    {
+      "when": "after cycle 11",
+      "one_minute": 1.88330078125,
+      "own": 0.2713893800476616
+    },
+    {
+      "when": "after cycle 12",
+      "one_minute": 1.88330078125,
+      "own": 0.28605768875472753
+    },
+    {
+      "when": "after cycle 13",
+      "one_minute": 1.88330078125,
+      "own": 0.3003760184665627
+    },
+    {
+      "when": "after cycle 14",
+      "one_minute": 1.88330078125,
+      "own": 0.31445184655472735
+    },
+    {
+      "when": "after cycle 15",
+      "one_minute": 1.8125,
+      "own": 0.3282129191237377
+    },
+    {
+      "when": "at the end",
+      "one_minute": 1.8125,
+      "own": 0.328213087786266
+    }
+  ],
+  "standing": {
+    "standing": "of record"
+  }
+}
