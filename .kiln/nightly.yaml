@@ -34,8 +34,10 @@ jobs:
   changes:
     name: change points in the nightly series
     needs: [latency]
-    runs-on: [k8s]
-    toolchain: rust
+    # A Linux container on a runner with docker (kiln's runners offer no k8s), never adacachy.
+    runs-on: [baremetal]
+    requires: ["arch == aarch64", "executors has docker"]
+    image: docker.io/library/rust:1.99.1-trixie
     # The metrics API reads the repository's runs (kiln's docs/ci.md, `ci.metrics.repo`: runs.read).
     permissions: { actions: read }
     timeout-minutes: 60

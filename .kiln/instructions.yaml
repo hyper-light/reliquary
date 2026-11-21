@@ -15,14 +15,15 @@ concurrency: { group: "instructions-${{ branch }}", cancel-in-progress: true }
 jobs:
   gate:
     name: instruction counts (bench/gated.toml, the change against its base)
-    runs-on: [k8s]
-    toolchain: rust
-    resources: { cpu: "4", memory: 8Gi }
+    # A Linux container on a runner with docker: kiln's runners offer docker and host executors, and no
+    # k8s; on arm64, where Valgrind runs as well (research/07 F21), so on a Mac's docker, never
+    # adacachy, which runs production.
+    runs-on: [baremetal]
+    requires: ["arch == aarch64", "executors has docker"]
+    image: docker.io/library/rust:1.99.1-trixie
     timeout-minutes: 90
     env:
       CARGO_INCREMENTAL: "0"
-      # A pod sees all of its host's CPUs, whatever it requests: builds are held to its request.
-      CARGO_BUILD_JOBS: "4"
     artifacts: ["records"]
     steps:
       - name: valgrind, git and python3
