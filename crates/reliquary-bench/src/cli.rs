@@ -561,6 +561,16 @@ fn changes_command(args: &[String], out: &mut impl Write) -> Result<Ending, Fail
             toml::from_str(&t).map_err(|e| Failure::Failed(format!("{f}: {e}")))?
         }
     };
+    // No night fed yet (only a record of record feeds one): kiln answers no points and no direction.
+    if answer.data.series.iter().all(|s| s.points.is_empty()) {
+        return write(
+            out,
+            &format!(
+                "{}: no night has been fed yet: nothing to look for change points in\n",
+                answer.data.name
+            ),
+        );
+    }
     let lower = match answer.data.better.as_deref() {
         Some("lower") => true,
         Some("higher") => false,
@@ -717,6 +727,26 @@ mod tests {
     /// commit range, and stays quiet once it is acknowledged (AC-RQ0.7.6, T-RQ0.7.10).
     #[test]
     fn a_worsening_alerts_with_its_range_until_acknowledged() {
+        let dir = tempfile::tempdir().unwrap();
+        // A metric no night has fed yet: kiln answers no points and no direction.
+        let empty = dir.path().join("empty.json");
+        std::fs::write(
+            &empty,
+            r#"{"repo":"hyper-light/reliquary","branch":"main","days":365,"data":{"name":"reliquary.bench.judge.latency_99_100","better":null,"series":[]}}"#,
+        )
+        .unwrap();
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let args = strings(&["changes", empty.to_str().unwrap()]);
+        let e = main(
+            &args,
+            "abc",
+            &mut std::io::Cursor::new(Vec::new()),
+            &mut out,
+            &mut err,
+        );
+        let said = String::from_utf8(out).unwrap();
+        assert_eq!(e, Ending::Done, "{said}{}", String::from_utf8_lossy(&err));
+        assert!(said.contains("no night has been fed yet"), "{said}");
         let dir = tempfile::tempdir().unwrap();
         let mut points = Vec::new();
         for night in 0..40i64 {
